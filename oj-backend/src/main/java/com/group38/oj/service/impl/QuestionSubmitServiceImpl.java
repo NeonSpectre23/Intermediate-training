@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.group38.oj.common.ErrorCode;
 import com.group38.oj.constant.CommonConstant;
 import com.group38.oj.exception.BusinessException;
+import com.group38.oj.judge.JudgeService;
+import com.group38.oj.mapper.QuestionSubmitMapper;
 import com.group38.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.group38.oj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.group38.oj.model.entity.Question;
@@ -15,21 +17,18 @@ import com.group38.oj.model.entity.User;
 import com.group38.oj.model.enums.QuestionSubmitLanguageEnum;
 import com.group38.oj.model.enums.QuestionSubmitStatusEnum;
 import com.group38.oj.model.vo.QuestionSubmitVO;
-import com.group38.oj.model.vo.UserVO;
 import com.group38.oj.service.QuestionService;
 import com.group38.oj.service.QuestionSubmitService;
-import com.group38.oj.mapper.QuestionSubmitMapper;
 import com.group38.oj.service.UserService;
 import com.group38.oj.utils.SqlUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +45,10 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     @Resource
     private UserService userService;
+
+    @Resource
+    @Lazy
+    private JudgeService judgeService;
 
     /**
      * 题目提交
@@ -83,6 +86,9 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目提交失败");
         }
+        CompletableFuture.runAsync(() -> {
+            judgeService.judge(questionSubmit.getId());
+        });
         return questionSubmit.getId();
     }
 

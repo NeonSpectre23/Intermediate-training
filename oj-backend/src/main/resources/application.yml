@@ -89,14 +89,17 @@ cos:
     secretKey: xxx
     region: xxx
     bucket: xxx
-# 接口文档配置
-knife4j:
-  enable: true
-  openapi:
-    title: "接口文档"
-    version: 1.0
-    group:
-      default:
-        api-rule: package
-        api-rule-resources:
-          - com.group38.oj.controller
+# 代码沙箱配置
+sandbox:
+  type: example
+## 接口文档配置
+#knife4j:
+#  enable: true
+#  openapi:
+#    title: "接口文档"
+#    version: 1.0
+#    group:
+#      default:
+#        api-rule: package
+#        api-rule-resources:
+#          - com.group38.oj.controller
