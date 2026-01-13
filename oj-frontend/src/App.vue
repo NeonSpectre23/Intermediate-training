@@ -11,6 +11,8 @@
 
 <style>
 #app {
+  max-height: 100vh;
+  overflow-y: auto;
 }
 </style>
 <script setup lang="ts">

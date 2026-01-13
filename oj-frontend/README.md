@@ -3,6 +3,9 @@
 ## Project setup
 ```
 yarn install
+yarn add monaco-editor-webpack-plugin -D
+yarn add monaco-editor -D
+yarn add moment
 ```
 
 ### Compiles and hot-reloads for development

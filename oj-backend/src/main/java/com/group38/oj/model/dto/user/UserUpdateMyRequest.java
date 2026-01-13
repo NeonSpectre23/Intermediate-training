@@ -27,5 +27,20 @@ public class UserUpdateMyRequest implements Serializable {
      */
     private String userProfile;
 
+    /**
+     * 旧密码（修改密码时需要）
+     */
+    private String oldPassword;
+
+    /**
+     * 新密码
+     */
+    private String newPassword;
+
+    /**
+     * 确认新密码
+     */
+    private String confirmPassword;
+
     private static final long serialVersionUID = 1L;
 }

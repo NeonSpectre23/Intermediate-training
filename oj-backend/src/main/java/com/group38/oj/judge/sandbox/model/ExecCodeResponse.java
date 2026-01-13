@@ -1,7 +1,6 @@
 package com.group38.oj.judge.sandbox.model;
 
 
-import com.group38.oj.model.dto.questionsubmit.JudgeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

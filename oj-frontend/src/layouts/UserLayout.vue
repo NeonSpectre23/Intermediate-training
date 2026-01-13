@@ -10,11 +10,6 @@
       <a-layout-content class="content">
         <router-view />
       </a-layout-content>
-      <a-layout-footer class="footer">
-        <a href="https://github.com/oj-frontend/oj-frontend" target="_blank">
-          oj-frontend
-        </a>
-      </a-layout-footer>
     </a-layout>
   </div>
 </template>
@@ -39,15 +34,6 @@
 #userLayout .content {
   margin-bottom: 16px;
   padding: 20px;
-}
-
-#userLayout .footer {
-  padding: 16px;
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  text-align: center;
 }
 </style>
 <script></script>

@@ -1,10 +1,9 @@
 package com.group38.oj.judge.strategy;
 
 import com.group38.oj.model.dto.question.JudgeCase;
-import com.group38.oj.model.dto.questionsubmit.JudgeInfo;
+import com.group38.oj.judge.sandbox.model.JudgeInfo;
 import com.group38.oj.model.entity.Question;
 import com.group38.oj.model.entity.QuestionSubmit;
-import com.group38.oj.model.enums.JudgeInfoMessageEnum;
 import lombok.Data;
 
 import java.util.List;

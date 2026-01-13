@@ -21,10 +21,33 @@
         </a-menu-item>
       </a-menu>
     </a-col>
-    <a-col flex="100px">
-      <div>
-        {{ store.state.user?.loginUser?.userName ?? "未登录" }}
-      </div>
+    <a-col flex="100px" style="display: flex; align-items: center; gap: 8px">
+      <template
+        v-if="
+          loginUser?.userName &&
+          loginUser.userName !== '未登录'
+        "
+      >
+        <!-- 已登录状态显示头像 -->
+        <a-avatar
+            :size="32"
+            :src="getAvatarUrl()"
+            :alt="loginUser.userName"
+            class="login-status"
+            @click="handleLoginStatusClick"
+            :style="{ cursor: 'pointer' }"
+          />
+      </template>
+      <template v-else>
+        <!-- 未登录状态 -->
+        <div
+          class="login-status"
+          @click="handleLoginStatusClick"
+          :style="{ cursor: 'pointer', textDecoration: 'underline' }"
+        >
+          未登录
+        </div>
+      </template>
     </a-col>
   </a-row>
 </template>
@@ -40,6 +63,15 @@ import ACCESS_ENUM from "@/access/accessEnum";
 const router = useRouter();
 const store = useStore();
 
+// 计算属性：登录用户信息
+const loginUser = computed(() => {
+  const user = store.state.user?.loginUser || { userName: '未登录' };
+  console.log('GlobalHeader loginUser:', user);
+  console.log('GlobalHeader userAvatar:', user.userAvatar);
+  console.log('GlobalHeader processed avatar:', (user.userAvatar || '').replace(/[`]/g, '').trim());
+  return user;
+});
+
 // 展示在菜单的路由数组
 const visibleRoutes = computed(() => {
   return routes.filter((item, index) => {
@@ -48,7 +80,7 @@ const visibleRoutes = computed(() => {
     }
     // todo 根据权限过滤菜单
     const access = item.meta?.access;
-    if (!checkAccess(store.state.user.loginUser, access)) {
+    if (!checkAccess(loginUser.value, access)) {
       return false;
     }
     return true;
@@ -67,19 +99,60 @@ watch(
   { immediate: true }
 );
 
-console.log(store.state.user.loginUser);
-
-setTimeout(() => {
-  store.dispatch("user/getLoginUser", {
-    userName: "hb管理员",
-    userRole: ACCESS_ENUM.ADMIN,
-  });
-}, 3000);
+// 初始加载时获取登录用户信息
+store.dispatch("user/getLoginUser");
 
 const doMenuClick = (key: string) => {
   router.push({
     path: key,
   });
+};
+
+// 获取头像URL，添加时间戳防止缓存
+const getAvatarUrl = () => {
+  if (!loginUser.value?.userAvatar) {
+    return '';
+  }
+  // 直接使用简单可靠的方法处理头像URL
+  const rawAvatar = String(loginUser.value.userAvatar);
+  console.log('Raw avatar URL:', rawAvatar);
+  
+  // 直接截取URL部分，去除可能的反引号和其他字符
+  // 寻找http开头，直到字符串结束
+  const httpIndex = rawAvatar.indexOf('http');
+  if (httpIndex === -1) {
+    console.log('No valid http URL found');
+    return '';
+  }
+  
+  // 提取完整URL
+  let cleanUrl = rawAvatar.substring(httpIndex);
+  console.log('Extracted URL:', cleanUrl);
+  
+  // 去除末尾可能的反引号
+  if (cleanUrl.endsWith('`')) {
+    cleanUrl = cleanUrl.slice(0, -1);
+  }
+  
+  // 添加时间戳防止缓存
+  const finalUrl = cleanUrl + '?t=' + Date.now();
+  console.log('Final avatar URL:', finalUrl);
+  return finalUrl;
+};
+
+// 处理登录状态点击事件
+const handleLoginStatusClick = () => {
+  if (!loginUser.value || !loginUser.value.userName || loginUser.value.userName === "未登录") {
+    // 未登录状态，跳转到登录页面
+    router.push({
+      path: "/user/login",
+    });
+  } else {
+    // 已登录状态，跳转到用户信息主页
+    router.push({
+      path: "/user/profile",
+    });
+  }
 };
 </script>
 

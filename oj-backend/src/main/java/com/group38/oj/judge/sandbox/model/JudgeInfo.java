@@ -1,4 +1,4 @@
-package com.group38.oj.model.dto.questionsubmit;
+package com.group38.oj.judge.sandbox.model;
 
 import lombok.Data;
 

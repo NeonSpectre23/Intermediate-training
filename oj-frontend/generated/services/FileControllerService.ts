@@ -10,7 +10,7 @@ export class FileControllerService {
     /**
      * uploadFile
      * @param file file
-     * @param biz
+     * @param biz biz
      * @returns BaseResponse_string_ OK
      * @returns any Created
      * @throws ApiError

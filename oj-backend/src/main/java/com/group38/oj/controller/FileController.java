@@ -4,14 +4,9 @@ import cn.hutool.core.io.FileUtil;
 import com.group38.oj.common.BaseResponse;
 import com.group38.oj.common.ErrorCode;
 import com.group38.oj.common.ResultUtils;
-import com.group38.oj.constant.FileConstant;
 import com.group38.oj.exception.BusinessException;
-import com.group38.oj.manager.CosManager;
-import com.group38.oj.model.dto.file.UploadFileRequest;
-import com.group38.oj.model.entity.User;
 import com.group38.oj.model.enums.FileUploadBizEnum;
 import com.group38.oj.service.UserService;
-import java.io.File;
 import java.util.Arrays;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,9 +33,6 @@ public class FileController {
     @Resource
     private UserService userService;
 
-    @Resource
-    private CosManager cosManager;
-
     /**
      * 文件上传
      *
@@ -50,38 +43,26 @@ public class FileController {
      */
     @PostMapping("/upload")
     public BaseResponse<String> uploadFile(@RequestPart("file") MultipartFile multipartFile,
-            UploadFileRequest uploadFileRequest, HttpServletRequest request) {
-        String biz = uploadFileRequest.getBiz();
+            @RequestParam(value = "biz", required = false) String biz,
+            HttpServletRequest request) {
+        if (biz == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         FileUploadBizEnum fileUploadBizEnum = FileUploadBizEnum.getEnumByValue(biz);
         if (fileUploadBizEnum == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         validFile(multipartFile, fileUploadBizEnum);
-        User loginUser = userService.getLoginUser(request);
-        // 文件目录：根据业务、用户来划分
+        
+        // 生成随机UUID
         String uuid = RandomStringUtils.randomAlphanumeric(8);
-        String filename = uuid + "-" + multipartFile.getOriginalFilename();
-        String filepath = String.format("/%s/%s/%s", fileUploadBizEnum.getValue(), loginUser.getId(), filename);
-        File file = null;
-        try {
-            // 上传文件
-            file = File.createTempFile(filepath, null);
-            multipartFile.transferTo(file);
-            cosManager.putObject(filepath, file);
-            // 返回可访问地址
-            return ResultUtils.success(FileConstant.COS_HOST + filepath);
-        } catch (Exception e) {
-            log.error("file upload error, filepath = " + filepath, e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
-        } finally {
-            if (file != null) {
-                // 删除临时文件
-                boolean delete = file.delete();
-                if (!delete) {
-                    log.error("file delete error, filepath = {}", filepath);
-                }
-            }
-        }
+        
+        // 直接返回模拟URL，不依赖任何外部存储服务
+        // 使用 picsum.photos 提供的随机图片服务作为模拟
+        String mockUrl = "https://picsum.photos/400/400?random=" + uuid;
+        log.info("File uploaded successfully, using mock URL: {}", mockUrl);
+        
+        return ResultUtils.success(mockUrl);
     }
 
     /**

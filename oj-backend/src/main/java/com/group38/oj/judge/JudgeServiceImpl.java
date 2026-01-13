@@ -10,7 +10,7 @@ import com.group38.oj.judge.sandbox.model.ExecCodeRequest;
 import com.group38.oj.judge.sandbox.model.ExecCodeResponse;
 import com.group38.oj.judge.strategy.JudgeContext;
 import com.group38.oj.model.dto.question.JudgeCase;
-import com.group38.oj.model.dto.questionsubmit.JudgeInfo;
+import com.group38.oj.judge.sandbox.model.JudgeInfo;
 import com.group38.oj.model.entity.Question;
 import com.group38.oj.model.entity.QuestionSubmit;
 import com.group38.oj.model.enums.QuestionSubmitStatusEnum;

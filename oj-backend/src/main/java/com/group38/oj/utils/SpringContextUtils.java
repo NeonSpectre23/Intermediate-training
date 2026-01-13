@@ -6,11 +6,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 /**
  * Spring 上下文获取工具
  *
-
-
+ *
+ *
  */
 @Component
 public class SpringContextUtils implements ApplicationContextAware {
@@ -53,5 +55,16 @@ public class SpringContextUtils implements ApplicationContextAware {
      */
     public static <T> T getBean(String beanName, Class<T> beanClass) {
         return applicationContext.getBean(beanName, beanClass);
+    }
+    
+    /**
+     * 通过类型获取所有 Bean
+     *
+     * @param beanClass
+     * @param <T>
+     * @return
+     */
+    public static <T> Map<String, T> getBeansOfType(Class<T> beanClass) {
+        return applicationContext.getBeansOfType(beanClass);
     }
 }

@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UserUpdateMyRequest = {
+    confirmPassword?: string;
+    newPassword?: string;
+    oldPassword?: string;
     userAvatar?: string;
     userName?: string;
     userProfile?: string;

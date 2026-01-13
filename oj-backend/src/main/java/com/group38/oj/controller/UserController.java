@@ -313,6 +313,39 @@ public class UserController {
         User user = new User();
         BeanUtils.copyProperties(userUpdateMyRequest, user);
         user.setId(loginUser.getId());
+        
+        // 处理密码修改逻辑
+        if (StringUtils.isNotBlank(userUpdateMyRequest.getOldPassword()) 
+                || StringUtils.isNotBlank(userUpdateMyRequest.getNewPassword()) 
+                || StringUtils.isNotBlank(userUpdateMyRequest.getConfirmPassword())) {
+            // 验证所有密码字段都不为空
+            if (StringUtils.isAnyBlank(userUpdateMyRequest.getOldPassword(), 
+                    userUpdateMyRequest.getNewPassword(), 
+                    userUpdateMyRequest.getConfirmPassword())) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码字段不能为空");
+            }
+            
+            // 验证旧密码是否正确
+            String encryptOldPassword = DigestUtils.md5DigestAsHex((SALT + userUpdateMyRequest.getOldPassword()).getBytes());
+            if (!encryptOldPassword.equals(loginUser.getUserPassword())) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "旧密码错误");
+            }
+            
+            // 验证新密码和确认密码是否一致
+            if (!userUpdateMyRequest.getNewPassword().equals(userUpdateMyRequest.getConfirmPassword())) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
+            }
+            
+            // 验证新密码长度
+            if (userUpdateMyRequest.getNewPassword().length() < 8) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "新密码长度不能少于8位");
+            }
+            
+            // 加密新密码
+            String encryptNewPassword = DigestUtils.md5DigestAsHex((SALT + userUpdateMyRequest.getNewPassword()).getBytes());
+            user.setUserPassword(encryptNewPassword);
+        }
+        
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);

@@ -1,9 +1,7 @@
 package com.group38.oj.model.vo;
 
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.group38.oj.model.dto.questionsubmit.JudgeInfo;
+import com.group38.oj.judge.sandbox.model.JudgeInfo;
 import com.group38.oj.model.entity.QuestionSubmit;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;

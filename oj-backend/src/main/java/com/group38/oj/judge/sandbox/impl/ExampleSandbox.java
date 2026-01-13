@@ -3,7 +3,7 @@ package com.group38.oj.judge.sandbox.impl;
 import com.group38.oj.judge.sandbox.Sandbox;
 import com.group38.oj.judge.sandbox.model.ExecCodeRequest;
 import com.group38.oj.judge.sandbox.model.ExecCodeResponse;
-import com.group38.oj.model.dto.questionsubmit.JudgeInfo;
+import com.group38.oj.judge.sandbox.model.JudgeInfo;
 import com.group38.oj.model.enums.JudgeInfoMessageEnum;
 import com.group38.oj.model.enums.QuestionSubmitStatusEnum;
 

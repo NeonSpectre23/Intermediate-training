@@ -1,6 +1,6 @@
 // Add a request interceptor
 import axios from "axios";
-
+axios.defaults.withCredentials = true;
 axios.interceptors.request.use(
   function (config) {
     // Do something before request is sent
@@ -16,6 +16,9 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   function (response) {
     console.log("响应", response);
+    console.log("响应完整数据:", response.data);
+    console.log("响应状态:", response.status);
+    console.log("响应头:", response.headers);
     // Any status code that lie within the range of 2xx cause this function to trigger
     // Do something with response data
     return response;
@@ -23,6 +26,12 @@ axios.interceptors.response.use(
   function (error) {
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
+    console.error("响应错误完整信息:", error);
+    if (error.response) {
+      console.error("错误响应数据:", error.response.data);
+      console.error("错误状态:", error.response.status);
+      console.error("错误头:", error.response.headers);
+    }
     return Promise.reject(error);
   }
 );

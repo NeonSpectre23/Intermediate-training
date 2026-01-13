@@ -72,6 +72,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             User user = new User();
             user.setUserAccount(userAccount);
             user.setUserPassword(encryptPassword);
+            // 设置默认头像
+            user.setUserAvatar("https://picsum.photos/200");
+            // 设置默认用户名（使用账号作为默认用户名）
+            user.setUserName(userAccount);
+            // 设置默认用户角色
+            user.setUserRole(UserRoleEnum.USER.getValue());
             boolean saveResult = this.save(user);
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
@@ -224,6 +230,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         LoginUserVO loginUserVO = new LoginUserVO();
         BeanUtils.copyProperties(user, loginUserVO);
+        // 确保userName不为null，避免前端显示问题
+        if (StringUtils.isBlank(loginUserVO.getUserName())) {
+            loginUserVO.setUserName(user.getUserAccount());
+        }
         return loginUserVO;
     }
 
@@ -234,6 +244,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
+        // 确保userName不为null，避免前端显示问题
+        if (StringUtils.isBlank(userVO.getUserName())) {
+            userVO.setUserName(user.getUserAccount());
+        }
         return userVO;
     }
 

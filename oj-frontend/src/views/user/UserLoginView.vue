@@ -1,59 +1,42 @@
 <template>
   <div id="userLoginView">
-    <a-row justify="center" align="middle" style="height: 100vh">
-      <a-col :span="8" :md="12" :sm="16" :xs="20">
-        <a-card
-          title="用户登录"
-          style="
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          "
+    <h2 style="margin-bottom: 16px">用户登录</h2>
+    <a-form
+      style="max-width: 480px; margin: 0 auto"
+      label-align="left"
+      auto-label-width
+      :model="form"
+      @submit="handleSubmit"
+    >
+      <a-form-item field="userAccount" label="账号">
+        <a-input v-model="form.userAccount" placeholder="请输入账号" />
+      </a-form-item>
+      <a-form-item field="userPassword" tooltip="密码不少于 8 位" label="密码">
+        <a-input-password
+          v-model="form.userPassword"
+          placeholder="请输入密码"
+        />
+      </a-form-item>
+      <a-form-item>
+        <a-button
+          type="primary"
+          html-type="submit"
+          style="width: 120px; margin-right: 16px"
         >
-          <p style="text-align: center; margin-bottom: 24px; color: #666">
-            欢迎使用CodeJudge，请登录您的账号
-          </p>
-          <a-form
-            label-align="left"
-            auto-label-width
-            :model="form"
-            @submit="handleSubmit"
-          >
-            <a-form-item field="userAccount" label="账号">
-              <a-input
-                v-model="form.userAccount"
-                name="userAccount"
-                placeholder="请输入您的账号"
-              />
-            </a-form-item>
-            <a-form-item
-              field="userPassword"
-              tooltip="密码不少于 8 位"
-              label="密码"
-            >
-              <a-input-password
-                v-model="form.userPassword"
-                name="userPassword"
-                placeholder="请输入您的密码"
-              />
-            </a-form-item>
-            <a-form-item>
-              <a-button
-                type="primary"
-                html-type="submit"
-                style="width: 100%; height: 40px; font-size: 16px"
-              >
-                登录
-              </a-button>
-            </a-form-item>
-          </a-form>
-          <p style="text-align: center; margin-top: 16px">
-            还没有账号？<a href="/user/register">立即注册</a>
-          </p>
-        </a-card>
-      </a-col>
-    </a-row>
+          登录
+        </a-button>
+        <a-button
+          type="outline"
+          @click="handleRegisterClick"
+          style="width: 120px; margin-right: 16px"
+        >
+          注册
+        </a-button>
+        <a-button type="outline" @click="handleCancel" style="width: 120px">
+          取消
+        </a-button>
+      </a-form-item>
+    </a-form>
   </div>
 </template>
 
@@ -64,9 +47,9 @@ import message from "@arco-design/web-vue/es/message";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 
-/*
-表单信息
-*/
+/**
+ * 表单信息
+ */
 const form = reactive({
   userAccount: "",
   userPassword: "",
@@ -75,34 +58,34 @@ const form = reactive({
 const router = useRouter();
 const store = useStore();
 
-/*
-提交表单
-*/
+/**
+ * 提交表单
+ * @param data
+ */
 const handleSubmit = async () => {
   const res = await UserControllerService.userLoginUsingPost(form);
-  // 登录成功=>服务页面
-  if (res.code == 0) {
+  // 登录成功，跳转到主页
+  if (res.code === 0) {
+    // 调用getLoginUser获取最新用户信息并更新状态
     await store.dispatch("user/getLoginUser");
     router.push({
       path: "/",
       replace: true,
     });
   } else {
-    message.error("登录失败，" + res.message);
+    message.error("登陆失败，" + res.message);
   }
 };
+
+const handleRegisterClick = () => {
+  router.push({
+    path: "/user/register",
+  });
+};
+
+const handleCancel = () => {
+  router.push({
+    path: "/",
+  });
+};
 </script>
-
-<style scoped>
-:global(html),
-:global(body) {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
-#userLoginView {
-  height: 100%;
-}
-</style>

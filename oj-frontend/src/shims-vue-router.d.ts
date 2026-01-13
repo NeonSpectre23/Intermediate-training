@@ -1,5 +1,7 @@
 declare module "vue-router" {
   import {
+    useRoute,
+    useRouter,
     createRouter,
     createWebHistory,
     createWebHashHistory,
@@ -11,6 +13,8 @@ declare module "vue-router" {
   } from "vue-router";
 
   export {
+    useRoute,
+    useRouter,
     createRouter,
     createWebHistory,
     createWebHashHistory,
