@@ -286,16 +286,11 @@ const doSubmit = async () => {
   margin-bottom: 0 !important;
 }
 
-/* 移除浅色主题下标签文字颜色的所有强制设置，让组件使用默认的文字颜色 */
-/* Arco Design 会根据标签颜色自动调整文字颜色，确保良好的对比度 */
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag,
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag-success,
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag-green,
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag-warning,
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag-orange,
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag-danger,
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag-blue {
-  color: inherit !important;
+/* 移除浅色主题下标签文字颜色的强制设置，让组件使用默认的文字颜色逻辑 */
+/* Arco Design 会根据标签背景颜色自动调整文字颜色，确保良好的对比度 */
+:root:not([data-theme="dark"]) #viewQuestionView .arco-tag {
+  /* 移除强制继承的文字颜色，让组件使用默认的文字颜色逻辑 */
+  color: unset !important;
 }
 
 /* 确保深色主题下卡片正确显示 */

@@ -87,11 +87,10 @@ public class PostController {
      */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() == null || deleteRequest.getId().isEmpty()) {
+        if (deleteRequest == null || deleteRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 将字符串ID转换为Long，避免精度丢失
-        Long postId = Long.parseLong(deleteRequest.getId());
+        Long postId = deleteRequest.getId();
         User user = userService.getLoginUser(request);
         // 判断是否存在
         Post oldPost = postService.getById(postId);

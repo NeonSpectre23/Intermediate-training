@@ -14,7 +14,7 @@ public abstract class AbstractObfuscatorStrategy implements ObfuscatorStrategy {
             System.getProperty("obfuscator.tools.root") : 
             (System.getenv("OBFUSCATOR_TOOLS_ROOT") != null ? 
              System.getenv("OBFUSCATOR_TOOLS_ROOT") : 
-             "c:\\Users\\16646\\Desktop\\实训\\Intermediate-training\\Tools\\");
+             "../Tools/");
     
     @Override
     public String obfuscate(ObfuscatorContext obfuscatorContext) {

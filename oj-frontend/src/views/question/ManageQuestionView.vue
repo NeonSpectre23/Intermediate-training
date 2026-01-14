@@ -127,14 +127,29 @@ const onPageChange = (page: number) => {
 };
 
 const doDelete = async (question: Question) => {
-  const res = await QuestionControllerService.deleteQuestionUsingPost({
-    id: question.id ? Number(question.id) : undefined,
-  });
-  if (res.code === 0) {
-    message.success("删除成功");
-    loadData();
-  } else {
-    message.error("删除失败");
+  try {
+    // 确保question.id是有效的
+    if (!question.id || question.id === "") {
+      console.error("题目ID无效");
+      message.error("题目不存在");
+      return;
+    }
+    
+    // 使用类型断言避免精度丢失，同时解决类型不匹配问题
+    const deleteId = question.id;
+    
+    const res = await QuestionControllerService.deleteQuestionUsingPost({
+      id: deleteId as unknown as number,
+    });
+    if (res.code === 0) {
+      message.success("删除成功");
+      loadData();
+    } else {
+      message.error("删除失败: " + res.message);
+    }
+  } catch (error) {
+    console.error("删除题目失败: ", error);
+    message.error("删除失败: " + (error as Error).message);
   }
 };
 

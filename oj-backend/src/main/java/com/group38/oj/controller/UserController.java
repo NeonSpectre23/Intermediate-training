@@ -191,11 +191,10 @@ public class UserController {
     @PostMapping("/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() == null || deleteRequest.getId().isEmpty()) {
+        if (deleteRequest == null || deleteRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 将字符串ID转换为Long，避免精度丢失
-        Long userId = Long.parseLong(deleteRequest.getId());
+        Long userId = deleteRequest.getId();
         boolean b = userService.removeById(userId);
         return ResultUtils.success(b);
     }

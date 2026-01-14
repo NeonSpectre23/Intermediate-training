@@ -35,7 +35,7 @@
       <template #acceptedRate="{ record }">
         {{
           `${
-            record.submitNum ? record.acceptedNum / record.submitNum : "0"
+            record.submitNum ? record.acceptedNum / record.submitNum * 100 : "0"
           }% (${record.acceptedNum}/${record.submitNum})`
         }}
       </template>
@@ -160,7 +160,7 @@ const router = useRouter();
 const store = useStore();
 
 // 收藏状态管理
-const favoriteIds = ref<Set<string>>(new Set());
+const favoriteIds = ref<Set<number>>(new Set());
 
 /**
  * 跳转到做题页面
@@ -176,7 +176,7 @@ const toQuestionPage = (question: Question) => {
  * 检查题目是否已收藏
  */
 const isFavorite = (questionId: string): boolean => {
-  return favoriteIds.value.has(questionId);
+  return favoriteIds.value.has(Number(questionId));
 };
 
 /**
@@ -207,19 +207,28 @@ const toggleFavorite = async (question: Question) => {
       return;
     }
     
-    // 调用后端API切换收藏状态
+    // 确保question.id是有效的
+    if (!question.id || question.id === "") {
+      console.error("题目ID无效");
+      message.error("题目不存在");
+      return;
+    }
+    
+    // 直接使用字符串类型的id，避免精度丢失
+    const questionId = question.id;
+    
     const res = await axios.post("/api/question_favour/", {
-      questionId: Number(question.id)
+      questionId: questionId
     });
     
     if (res.data.code === 0) {
       if (isFavorite(question.id)) {
         // 取消收藏成功
-        favoriteIds.value.delete(question.id);
+        favoriteIds.value.delete(questionId);
         message.success("取消收藏成功");
       } else {
         // 收藏成功
-        favoriteIds.value.add(question.id);
+        favoriteIds.value.add(questionId);
         message.success("收藏成功");
       }
     } else {
@@ -251,8 +260,8 @@ const loadFavorites = async () => {
     });
     
     if (res.data.code === 0) {
-      // 提取收藏的题目ID
-      const favoriteQuestionIds = res.data.data.records.map((item: any) => item.id);
+      // 提取收藏的题目ID，并转换为number类型
+      const favoriteQuestionIds = res.data.data.records.map((item: any) => Number(item.id));
       favoriteIds.value = new Set(favoriteQuestionIds);
     }
   } catch (error) {
