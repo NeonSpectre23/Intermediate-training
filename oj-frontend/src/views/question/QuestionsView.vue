@@ -284,8 +284,6 @@ const resetSearch = () => {
   searchParams.value = {
     title: "",
     tags: [],
-    category: "",
-    difficulty: [],
     pageSize: 10,
     current: 1,
   };
