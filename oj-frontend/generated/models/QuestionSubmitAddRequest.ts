@@ -5,6 +5,6 @@
 export type QuestionSubmitAddRequest = {
     code?: string;
     language?: string;
-    questionId?: string;
+    questionId?: number;
 };
 

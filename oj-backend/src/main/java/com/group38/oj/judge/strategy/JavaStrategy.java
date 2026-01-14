@@ -36,14 +36,7 @@ public class JavaStrategy implements JudgeStrategy {
         }
 
         for (int i = 0; i < list.size(); i++) {
-            String expectedOutput = list.get(i).getOutput().trim();
-            String actualOutput = outputList.get(i).trim();
-            
-            // 增强比较逻辑：处理空白字符和换行符
-            expectedOutput = expectedOutput.replaceAll("\\s+", " ").trim();
-            actualOutput = actualOutput.replaceAll("\\s+", " ").trim();
-            
-            if (!expectedOutput.equals(actualOutput)) {
+            if (list.get(i).getOutput().equals(outputList.get(i))) {
                 judgeInfoMessageEnum = JudgeInfoMessageEnum.WRONG_ANSWER;
                 judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
                 return judgeInfoResponse;

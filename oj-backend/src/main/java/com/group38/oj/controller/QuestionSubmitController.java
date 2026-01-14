@@ -10,9 +10,11 @@ import com.group38.oj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.group38.oj.model.entity.QuestionSubmit;
 import com.group38.oj.model.entity.User;
 import com.group38.oj.model.vo.QuestionSubmitVO;
+import com.group38.oj.service.QuestionService;
 import com.group38.oj.service.QuestionSubmitService;
 import com.group38.oj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +36,8 @@ public class QuestionSubmitController {
 
     @Resource
     private UserService userService;
+    @Autowired
+    private QuestionService questionService;
 
     /**
      * 提交题目

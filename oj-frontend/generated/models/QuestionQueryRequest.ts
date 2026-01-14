@@ -6,12 +6,12 @@ export type QuestionQueryRequest = {
     answer?: string;
     content?: string;
     current?: number;
-    id?: string;
+    id?: number;
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
     tags?: Array<string>;
     title?: string;
-    userId?: string;
+    userId?: number;
 };
 

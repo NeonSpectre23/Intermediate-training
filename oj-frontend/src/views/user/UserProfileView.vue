@@ -134,25 +134,10 @@ const store = useStore();
 
 // 用户信息
 const userInfo = computed(() => {
-  try {
-    // 检查store对象是否存在
-    if (!store) {
-      console.error("Store对象未定义");
-      return {};
-    }
-    // 安全地访问store.state.user
-    const userModule = store.state?.user;
-    if (!userModule) {
-      return {};
-    }
-    const info = userModule.loginUser || {};
-    console.log("userInfo:", info);
-    console.log("userInfo.userAvatar:", info.userAvatar);
-    return info;
-  } catch (error) {
-    console.error('Error accessing userInfo:', error);
-    return {};
-  }
+  const info = store.state.user?.loginUser || {};
+  console.log("userInfo:", info);
+  console.log("userInfo.userAvatar:", info.userAvatar);
+  return info;
 });
 
 // 修改信息弹窗显示状态
@@ -263,7 +248,7 @@ const handleFileChange = async (event: Event) => {
   const maxSize = 1 * 1024 * 1024; // 1MB
   if (file.size > maxSize) {
     try {
-      message.loading("图片压缩中...");
+      message.loading("图片压缩中...", 0);
       console.log("Compressing image...");
 
       // 压缩图片，调整质量参数以确保压缩后的文件大小不超过1MB
@@ -293,7 +278,7 @@ const handleFileChange = async (event: Event) => {
   }
 
   try {
-    message.loading("上传中...");
+    message.loading("上传中...", 0);
     // 调用文件上传API
     console.log("Calling FileControllerService.uploadFileUsingPost...");
     console.log("Upload file info:", {
@@ -308,7 +293,10 @@ const handleFileChange = async (event: Event) => {
     testFormData.append("file", uploadFile);
     testFormData.append("biz", "user_avatar");
     console.log("Test FormData created:", testFormData);
-
+    console.log(
+      "Test FormData has getHeaders method:",
+      typeof testFormData.getHeaders === "function"
+    );
 
     const res = await FileControllerService.uploadFileUsingPost(
       uploadFile,
@@ -332,7 +320,10 @@ const handleFileChange = async (event: Event) => {
 
       // 修复：使用更可靠的方法去除反引号
       // 方法1：使用replaceAll去除所有反引号
-      // 使用正则表达式，确保匹配所有反引号（包括可能的特殊情况）
+      avatarUrl = avatarUrl.replaceAll('`', '');
+      console.log("After replaceAll:", avatarUrl);
+
+      // 方法2：使用正则表达式，确保匹配所有反引号（包括可能的特殊情况）
       avatarUrl = avatarUrl.replace(/[`\u0060]/g, '');
       console.log("After regex replace:", avatarUrl);
 
@@ -350,16 +341,11 @@ const handleFileChange = async (event: Event) => {
       );
       
       // 直接更新Vuex全局状态，确保Header立即显示新头像
-      // 安全地获取当前用户信息
-      const userModule = store.state?.user;
-      const currentUser = userModule?.loginUser || {};
       store.commit("user/updateUser", {
-        ...currentUser,
+        ...store.state.user.loginUser,
         userAvatar: avatarUrl,
       });
-      // 安全地获取更新后的用户信息
-      const updatedUserModule = store.state?.user;
-      console.log("直接更新Vuex state后的loginUser:", updatedUserModule?.loginUser);
+      console.log("直接更新Vuex state后的loginUser:", store.state.user.loginUser);
     } else {
       message.error("上传失败：" + res.message);
       console.error(

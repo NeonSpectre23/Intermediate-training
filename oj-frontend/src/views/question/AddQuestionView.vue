@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import MdEditor from "@/components/MdEditor.vue";
-import { QuestionControllerService, Question, QuestionAddRequest, QuestionUpdateRequest } from "../../../generated";
+import { QuestionControllerService } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
 import { useRoute } from "vue-router";
 
@@ -108,19 +108,7 @@ const route = useRoute();
 // 如果页面地址包含 update，视为更新页面
 const updatePage = route.path.includes("update");
 
-// 创建本地类型，确保judgeCase和judgeConfig是必填的
-interface LocalQuestionForm {
-  id?: string | number;
-  title: string;
-  tags: Array<string>;
-  answer: string;
-  content: string;
-  judgeCase: Array<{ input: string; output: string }>;
-  judgeConfig: { memoryLimit: number; stackLimit: number; timeLimit: number };
-}
-
-// 联合类型，包含创建和更新所需的所有字段
-let form = ref<LocalQuestionForm>({
+let form = ref({
   title: "",
   tags: [],
   answer: "",
@@ -146,32 +134,36 @@ const loadData = async () => {
   if (!id) {
     return;
   }
-  // 使用getQuestionVoByIdUsingGet方法，它没有严格的权限检查
-  const res = await QuestionControllerService.getQuestionVoByIdUsingGet(
+  const res = await QuestionControllerService.getQuestionByIdUsingGet(
     id as any
   );
   if (res.code === 0) {
-    const questionVO = res.data as any;
-    // 构建form需要的数据结构
-    form.value = {
-      id: id as any,
-      title: questionVO.title || "",
-      tags: questionVO.tags || [],
-      answer: questionVO.answer || "",
-      content: questionVO.content || "",
-      // 处理判题配置和判题用例
-      judgeConfig: questionVO.judgeConfig || {
-        memoryLimit: 1000,
-        stackLimit: 1000,
-        timeLimit: 1000,
-      },
-      judgeCase: questionVO.judgeCase || [
+    form.value = res.data as any;
+    // json 转 js 对象
+    if (!form.value.judgeCase) {
+      form.value.judgeCase = [
         {
           input: "",
           output: "",
         },
-      ],
-    };
+      ];
+    } else {
+      form.value.judgeCase = JSON.parse(form.value.judgeCase as any);
+    }
+    if (!form.value.judgeConfig) {
+      form.value.judgeConfig = {
+        memoryLimit: 1000,
+        stackLimit: 1000,
+        timeLimit: 1000,
+      };
+    } else {
+      form.value.judgeConfig = JSON.parse(form.value.judgeConfig as any);
+    }
+    if (!form.value.tags) {
+      form.value.tags = [];
+    } else {
+      form.value.tags = JSON.parse(form.value.tags as any);
+    }
   } else {
     message.error("加载失败，" + res.message);
   }
@@ -185,18 +177,8 @@ const doSubmit = async () => {
   console.log(form.value);
   // 区分更新还是创建
   if (updatePage) {
-    // 转换为QuestionEditRequest类型，使用editQuestion方法（普通用户也可以调用）
-    const editRequest = {
-      ...form.value,
-      // 直接传递字符串id，后端会自己转换为Long类型
-      id: form.value.id as string,
-      // 直接传递对象类型，后端会自己转换为JSON字符串
-      judgeCase: form.value.judgeCase,
-      judgeConfig: form.value.judgeConfig,
-      tags: form.value.tags,
-    };
-    const res = await QuestionControllerService.editQuestionUsingPost(
-      editRequest as any
+    const res = await QuestionControllerService.updateQuestionUsingPost(
+      form.value
     );
     if (res.code === 0) {
       message.success("更新成功");
@@ -204,16 +186,8 @@ const doSubmit = async () => {
       message.error("更新失败，" + res.message);
     }
   } else {
-    // 转换为QuestionAddRequest类型
-    const addRequest = {
-      ...form.value,
-      // 直接传递对象类型，后端会自己转换为JSON字符串
-      judgeCase: form.value.judgeCase,
-      judgeConfig: form.value.judgeConfig,
-      tags: form.value.tags,
-    };
     const res = await QuestionControllerService.addQuestionUsingPost(
-      addRequest as any
+      form.value
     );
     if (res.code === 0) {
       message.success("创建成功");
@@ -250,7 +224,6 @@ const onAnswerChange = (value: string) => {
 </script>
 
 <style scoped>
-/* #addQuestionView {
-   可以在这里添加样式
-} */
+#addQuestionView {
+}
 </style>

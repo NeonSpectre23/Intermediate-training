@@ -191,11 +191,10 @@ public class UserController {
     @PostMapping("/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() == null) {
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Long userId = deleteRequest.getId();
-        boolean b = userService.removeById(userId);
+        boolean b = userService.removeById(deleteRequest.getId());
         return ResultUtils.success(b);
     }
 
@@ -229,13 +228,11 @@ public class UserController {
      */
     @GetMapping("/get")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<User> getUserById(String id, HttpServletRequest request) {
-        if (id == null || id.isEmpty()) {
+    public BaseResponse<User> getUserById(long id, HttpServletRequest request) {
+        if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 将字符串ID转换为Long，避免精度丢失
-        Long userId = Long.parseLong(id);
-        User user = userService.getById(userId);
+        User user = userService.getById(id);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
         return ResultUtils.success(user);
     }
@@ -248,7 +245,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<UserVO> getUserVOById(String id, HttpServletRequest request) {
+    public BaseResponse<UserVO> getUserVOById(long id, HttpServletRequest request) {
         BaseResponse<User> response = getUserById(id, request);
         User user = response.getData();
         return ResultUtils.success(userService.getUserVO(user));

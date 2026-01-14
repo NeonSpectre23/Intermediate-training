@@ -15,7 +15,7 @@ public class QuestionUpdateRequest implements Serializable {
     /**
      * id
      */
-    private String id;
+    private Long id;
 
     /**
      * 标题

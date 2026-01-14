@@ -1,9 +1,6 @@
 import { createStore } from "vuex";
 import user from "./user";
-
-// 创建Vuex store实例
-const store = createStore({
-  state: () => ({}), // 确保root state始终存在
+export default createStore({
   getters: {},
   mutations: {},
   actions: {},
@@ -11,5 +8,3 @@ const store = createStore({
     user,
   },
 });
-
-export default store;

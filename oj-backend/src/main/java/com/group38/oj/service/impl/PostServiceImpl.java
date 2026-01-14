@@ -104,32 +104,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         String searchText = postQueryRequest.getSearchText();
         String sortField = postQueryRequest.getSortField();
         String sortOrder = postQueryRequest.getSortOrder();
-        
-        // 处理id
-        String idStr = postQueryRequest.getId();
-        Long id = null;
-        if (StringUtils.isNotBlank(idStr)) {
-            id = Long.parseLong(idStr);
-        }
-        
+        Long id = postQueryRequest.getId();
         String title = postQueryRequest.getTitle();
         String content = postQueryRequest.getContent();
         List<String> tagList = postQueryRequest.getTags();
-        
-        // 处理userId
-        String userIdStr = postQueryRequest.getUserId();
-        Long userId = null;
-        if (StringUtils.isNotBlank(userIdStr)) {
-            userId = Long.parseLong(userIdStr);
-        }
-        
-        // 处理notId
-        String notIdStr = postQueryRequest.getNotId();
-        Long notId = null;
-        if (StringUtils.isNotBlank(notIdStr)) {
-            notId = Long.parseLong(notIdStr);
-        }
-        
+        Long userId = postQueryRequest.getUserId();
+        Long notId = postQueryRequest.getNotId();
         // 拼接查询条件
         if (StringUtils.isNotBlank(searchText)) {
             queryWrapper.and(qw -> qw.like("title", searchText).or().like("content", searchText));
@@ -138,7 +118,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         queryWrapper.like(StringUtils.isNotBlank(content), "content", content);
         if (CollUtil.isNotEmpty(tagList)) {
             for (String tag : tagList) {
-                queryWrapper.like("tags", '"' + tag + '"');
+                queryWrapper.like("tags", "\"" + tag + "\"");
             }
         }
         queryWrapper.ne(ObjectUtils.isNotEmpty(notId), "id", notId);
@@ -151,31 +131,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public Page<Post> searchFromEs(PostQueryRequest postQueryRequest) {
-        // 处理id
-        String idStr = postQueryRequest.getId();
-        Long id = null;
-        if (StringUtils.isNotBlank(idStr)) {
-            id = Long.parseLong(idStr);
-        }
-        
-        // 处理notId
-        String notIdStr = postQueryRequest.getNotId();
-        Long notId = null;
-        if (StringUtils.isNotBlank(notIdStr)) {
-            notId = Long.parseLong(notIdStr);
-        }
-        
+        Long id = postQueryRequest.getId();
+        Long notId = postQueryRequest.getNotId();
         String searchText = postQueryRequest.getSearchText();
         String title = postQueryRequest.getTitle();
         String content = postQueryRequest.getContent();
         List<String> tagList = postQueryRequest.getTags();
         List<String> orTagList = postQueryRequest.getOrTags();
-        // 处理userId
-        String userIdStr = postQueryRequest.getUserId();
-        Long userId = null;
-        if (StringUtils.isNotBlank(userIdStr)) {
-            userId = Long.parseLong(userIdStr);
-        }
+        Long userId = postQueryRequest.getUserId();
         // es 起始页为 0
         long current = postQueryRequest.getCurrent() - 1;
         long pageSize = postQueryRequest.getPageSize();

@@ -21,10 +21,7 @@
         </a-menu-item>
       </a-menu>
     </a-col>
-    <a-col flex="150px" style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
-      <!-- 主题切换 -->
-      <ThemeSwitcher />
-      
+    <a-col flex="100px" style="display: flex; align-items: center; gap: 8px">
       <template
         v-if="
           loginUser?.userName &&
@@ -62,33 +59,17 @@ import { computed, ref, watch } from "vue";
 import { useStore } from "vuex";
 import checkAccess from "@/access/checkAccess";
 import ACCESS_ENUM from "@/access/accessEnum";
-import ThemeSwitcher from "./ThemeSwitcher.vue";
 
 const router = useRouter();
 const store = useStore();
 
 // 计算属性：登录用户信息
 const loginUser = computed(() => {
-  try {
-    // 检查store对象是否存在
-    if (!store) {
-      console.error("Store对象未定义");
-      return { userName: '未登录' };
-    }
-    // 安全地访问store.state.user
-    const userModule = store.state?.user;
-    if (!userModule) {
-      return { userName: '未登录' };
-    }
-    const user = userModule.loginUser || { userName: '未登录' };
-    console.log('GlobalHeader loginUser:', user);
-    console.log('GlobalHeader userAvatar:', user.userAvatar);
-    console.log('GlobalHeader processed avatar:', (user.userAvatar || '').replace(/[`]/g, '').trim());
-    return user;
-  } catch (error) {
-    console.error('Error accessing loginUser:', error);
-    return { userName: '未登录' };
-  }
+  const user = store.state.user?.loginUser || { userName: '未登录' };
+  console.log('GlobalHeader loginUser:', user);
+  console.log('GlobalHeader userAvatar:', user.userAvatar);
+  console.log('GlobalHeader processed avatar:', (user.userAvatar || '').replace(/[`]/g, '').trim());
+  return user;
 });
 
 // 展示在菜单的路由数组

@@ -87,19 +87,19 @@ public class PostController {
      */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() == null) {
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Long postId = deleteRequest.getId();
         User user = userService.getLoginUser(request);
+        long id = deleteRequest.getId();
         // 判断是否存在
-        Post oldPost = postService.getById(postId);
+        Post oldPost = postService.getById(id);
         ThrowUtils.throwIf(oldPost == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可删除
         if (!oldPost.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
-        boolean b = postService.removeById(postId);
+        boolean b = postService.removeById(id);
         return ResultUtils.success(b);
     }
 
@@ -112,23 +112,20 @@ public class PostController {
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updatePost(@RequestBody PostUpdateRequest postUpdateRequest) {
-        if (postUpdateRequest == null || postUpdateRequest.getId() == null || postUpdateRequest.getId().isEmpty()) {
+        if (postUpdateRequest == null || postUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Post post = new Post();
-        // 先复制非id字段
-        BeanUtils.copyProperties(postUpdateRequest, post, "id");
+        BeanUtils.copyProperties(postUpdateRequest, post);
         List<String> tags = postUpdateRequest.getTags();
         if (tags != null) {
             post.setTags(JSONUtil.toJsonStr(tags));
         }
         // 参数校验
         postService.validPost(post, false);
-        // 将字符串ID转换为Long，避免精度丢失
-        Long postId = Long.parseLong(postUpdateRequest.getId());
-        post.setId(postId);
+        long id = postUpdateRequest.getId();
         // 判断是否存在
-        Post oldPost = postService.getById(postId);
+        Post oldPost = postService.getById(id);
         ThrowUtils.throwIf(oldPost == null, ErrorCode.NOT_FOUND_ERROR);
         boolean result = postService.updateById(post);
         return ResultUtils.success(result);
@@ -141,13 +138,11 @@ public class PostController {
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<PostVO> getPostVOById(String id, HttpServletRequest request) {
-        if (id == null || id.isEmpty()) {
+    public BaseResponse<PostVO> getPostVOById(long id, HttpServletRequest request) {
+        if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 将字符串ID转换为Long，避免精度丢失
-        Long postId = Long.parseLong(id);
-        Post post = postService.getById(postId);
+        Post post = postService.getById(id);
         if (post == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
@@ -203,8 +198,7 @@ public class PostController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
-        // 将Long类型的userId转换为String类型，避免类型不匹配
-        postQueryRequest.setUserId(String.valueOf(loginUser.getId()));
+        postQueryRequest.setUserId(loginUser.getId());
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
         // 限制爬虫
@@ -242,12 +236,11 @@ public class PostController {
      */
     @PostMapping("/edit")
     public BaseResponse<Boolean> editPost(@RequestBody PostEditRequest postEditRequest, HttpServletRequest request) {
-        if (postEditRequest == null || postEditRequest.getId() == null || postEditRequest.getId().isEmpty()) {
+        if (postEditRequest == null || postEditRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Post post = new Post();
-        // 先复制非id字段
-        BeanUtils.copyProperties(postEditRequest, post, "id");
+        BeanUtils.copyProperties(postEditRequest, post);
         List<String> tags = postEditRequest.getTags();
         if (tags != null) {
             post.setTags(JSONUtil.toJsonStr(tags));
@@ -255,11 +248,9 @@ public class PostController {
         // 参数校验
         postService.validPost(post, false);
         User loginUser = userService.getLoginUser(request);
-        // 将字符串ID转换为Long，避免精度丢失
-        Long postId = Long.parseLong(postEditRequest.getId());
-        post.setId(postId);
+        long id = postEditRequest.getId();
         // 判断是否存在
-        Post oldPost = postService.getById(postId);
+        Post oldPost = postService.getById(id);
         ThrowUtils.throwIf(oldPost == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
         if (!oldPost.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {

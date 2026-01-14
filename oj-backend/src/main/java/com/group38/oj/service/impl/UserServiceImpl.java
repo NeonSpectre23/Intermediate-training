@@ -229,10 +229,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return null;
         }
         LoginUserVO loginUserVO = new LoginUserVO();
-        // 先复制非id字段
-        BeanUtils.copyProperties(user, loginUserVO, "id");
-        // 将Long类型的id转换为String类型，避免JavaScript中的精度丢失问题
-        loginUserVO.setId(String.valueOf(user.getId()));
+        BeanUtils.copyProperties(user, loginUserVO);
         // 确保userName不为null，避免前端显示问题
         if (StringUtils.isBlank(loginUserVO.getUserName())) {
             loginUserVO.setUserName(user.getUserAccount());
@@ -246,10 +243,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return null;
         }
         UserVO userVO = new UserVO();
-        // 先复制非id字段
-        BeanUtils.copyProperties(user, userVO, "id");
-        // 将Long类型的id转换为String类型，避免JavaScript中的精度丢失问题
-        userVO.setId(String.valueOf(user.getId()));
+        BeanUtils.copyProperties(user, userVO);
         // 确保userName不为null，避免前端显示问题
         if (StringUtils.isBlank(userVO.getUserName())) {
             userVO.setUserName(user.getUserAccount());

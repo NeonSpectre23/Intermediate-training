@@ -19,12 +19,12 @@ public class PostQueryRequest extends PageRequest implements Serializable {
     /**
      * id
      */
-    private String id;
+    private Long id;
 
     /**
      * id
      */
-    private String notId;
+    private Long notId;
 
     /**
      * 搜索词
@@ -54,12 +54,12 @@ public class PostQueryRequest extends PageRequest implements Serializable {
     /**
      * 创建用户 id
      */
-    private String userId;
+    private Long userId;
 
     /**
      * 收藏用户 id
      */
-    private String favourUserId;
+    private Long favourUserId;
 
     private static final long serialVersionUID = 1L;
 }

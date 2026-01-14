@@ -90,20 +90,12 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
             return queryWrapper;
         }
 
-        String idStr = questionQueryRequest.getId();
-        Long id = null;
-        if (StringUtils.isNotBlank(idStr)) {
-            id = Long.parseLong(idStr);
-        }
+        Long id = questionQueryRequest.getId();
         String title = questionQueryRequest.getTitle();
         String content = questionQueryRequest.getContent();
         List<String> tags = questionQueryRequest.getTags();
         String answer = questionQueryRequest.getAnswer();
-        String userIdStr = questionQueryRequest.getUserId();
-        Long userId = null;
-        if (StringUtils.isNotBlank(userIdStr)) {
-            userId = Long.parseLong(userIdStr);
-        }
+        Long userId = questionQueryRequest.getUserId();
         String sortField = questionQueryRequest.getSortField();
         String sortOrder = questionQueryRequest.getSortOrder();
 

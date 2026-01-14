@@ -8,7 +8,7 @@ export type Question = {
     content?: string;
     createTime?: string;
     favourNum?: number;
-    id?: string;
+    id?: number;
     isDelete?: number;
     judgeCase?: string;
     judgeConfig?: string;
@@ -17,6 +17,6 @@ export type Question = {
     thumbNum?: number;
     title?: string;
     updateTime?: string;
-    userId?: string;
+    userId?: number;
 };
 

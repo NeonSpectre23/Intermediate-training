@@ -69,7 +69,7 @@ export class UserControllerService {
      * @throws ApiError
      */
     public static getUserByIdUsingGet(
-        id?: string,
+        id?: number,
     ): CancelablePromise<BaseResponse_User_> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -107,7 +107,7 @@ export class UserControllerService {
      * @throws ApiError
      */
     public static getUserVoByIdUsingGet(
-        id?: string,
+        id?: number,
     ): CancelablePromise<BaseResponse_UserVO_> {
         return __request(OpenAPI, {
             method: 'GET',

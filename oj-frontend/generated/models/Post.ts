@@ -6,12 +6,12 @@ export type Post = {
     content?: string;
     createTime?: string;
     favourNum?: number;
-    id?: string;
+    id?: number;
     isDelete?: number;
     tags?: string;
     thumbNum?: number;
     title?: string;
     updateTime?: string;
-    userId?: string;
+    userId?: number;
 };
 

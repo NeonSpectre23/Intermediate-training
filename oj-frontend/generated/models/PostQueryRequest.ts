@@ -5,9 +5,9 @@
 export type PostQueryRequest = {
     content?: string;
     current?: number;
-    favourUserId?: string;
-    id?: string;
-    notId?: string;
+    favourUserId?: number;
+    id?: number;
+    notId?: number;
     orTags?: Array<string>;
     pageSize?: number;
     searchText?: string;
@@ -15,6 +15,6 @@ export type PostQueryRequest = {
     sortOrder?: string;
     tags?: Array<string>;
     title?: string;
-    userId?: string;
+    userId?: number;
 };
 
