@@ -30,6 +30,7 @@ import {
 } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
 import { useRouter } from "vue-router";
+import { safeCellText } from "@/utils/safeRender";
 
 const tableRef = ref();
 
@@ -45,8 +46,14 @@ const loadData = async () => {
     searchParams.value
   );
   if (res.code === 0) {
-    dataList.value = res.data.records;
-    total.value = res.data.total;
+    // 使用深拷贝将可能带有特殊原型的对象转换为普通 JSON 对象，避免 String 转换报错
+    try {
+      dataList.value = JSON.parse(JSON.stringify(res.data.records || []));
+    } catch {
+      dataList.value = (res.data.records || []) as any;
+    }
+    // 确保分页 total 为普通数字
+    total.value = Number((res.data.total as any) || 0);
   } else {
     message.error("加载失败，" + res.message);
   }
@@ -72,46 +79,92 @@ const columns = [
   {
     title: "id",
     dataIndex: "id",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "标题",
     dataIndex: "title",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "内容",
     dataIndex: "content",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "标签",
     dataIndex: "tags",
+    customRender: ({ text }) => {
+      if (!text) return "";
+      if (Array.isArray(text)) {
+        return text.map((tag) => safeCellText(tag)).join(", ");
+      }
+      if (typeof text === "string") {
+        try {
+          const parsed = JSON.parse(text);
+          return Array.isArray(parsed)
+            ? parsed.map((tag) => safeCellText(tag)).join(", ")
+            : safeCellText(text);
+        } catch {
+          return safeCellText(text);
+        }
+      }
+      return safeCellText(text);
+    }
   },
   {
     title: "答案",
     dataIndex: "answer",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "提交数",
     dataIndex: "submitNum",
+    customRender: ({ text }) => {
+      return safeCellText(Number(text || 0));
+    }
   },
   {
     title: "通过数",
     dataIndex: "acceptedNum",
+    customRender: ({ text }) => {
+      return safeCellText(Number(text || 0));
+    }
   },
-  {
-    title: "判题配置",
+  {        title: "判题配置",
     dataIndex: "judgeConfig",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "判题用例",
     dataIndex: "judgeCase",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "用户id",
     dataIndex: "userId",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "创建时间",
     dataIndex: "createTime",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "操作",

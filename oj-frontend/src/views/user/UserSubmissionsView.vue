@@ -122,6 +122,7 @@ import { useRouter } from "vue-router";
 import { QuestionSubmitControllerService } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
 import moment from "moment";
+import { safeCellText } from "@/utils/safeRender";
 
 const router = useRouter();
 
@@ -178,35 +179,66 @@ const currentCode = ref("");
 const columns = [
   {
     title: "题目",
-    slotName: "question"
+    slotName: "question",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "状态",
-    slotName: "status"
+    slotName: "status",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
-  {
-    title: "语言",
-    dataIndex: "language"
+  { 
+    title: "语言", 
+    dataIndex: "language",
+    customRender: ({ text }) => {
+      return safeCellText(text || "未知");
+    }
   },
   {
     title: "执行信息",
     slotName: "judgeInfo",
-    ellipsis: true
+    ellipsis: true,
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "执行时间",
-    slotName: "time"
+    slotName: "time",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "内存使用",
-    slotName: "memory"
+    slotName: "memory",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "提交时间",
-    slotName: "createTime"
+    slotName: "createTime",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
-    slotName: "optional"
+    slotName: "optional",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   }
 ];
 

@@ -37,6 +37,7 @@ import { useRouter } from "vue-router";
 import message from "@arco-design/web-vue/es/message";
 import moment from "moment";
 import axios from "axios";
+import { safeCellText } from "@/utils/safeRender";
 
 const router = useRouter();
 
@@ -69,7 +70,7 @@ const columns = [
     title: "题号",
     dataIndex: "id",
     customRender: ({ text }) => {
-      return String(text);
+      return safeCellText(text);
     }
   },
   {
@@ -77,13 +78,17 @@ const columns = [
     dataIndex: "title",
     ellipsis: true,
     customRender: ({ text }) => {
-      return String(text);
+      return safeCellText(text);
     }
   },
   {
     title: "标签",
     slotName: "tags",
-    ellipsis: true
+    ellipsis: true,
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "通过率",
@@ -101,7 +106,7 @@ const columns = [
     title: "提交数",
     dataIndex: "submitNum",
     customRender: ({ text }) => {
-      return Number(text) || 0;
+      return safeCellText(Number(text) || 0);
     }
   },
   {
@@ -112,7 +117,11 @@ const columns = [
     }
   },
   {
-    slotName: "optional"
+    slotName: "optional",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   }
 ];
 
@@ -149,7 +158,7 @@ const removeFavorite = async (questionId?: string) => {
   try {
     // 调用取消收藏的API
     const res = await axios.post("/api/question_favour/", {
-      questionId: Number(questionId)
+      questionId: questionId
     });
     if (res.data.code === 0) {
       message.success("取消收藏成功");

@@ -39,12 +39,12 @@
     <a-card title="热门题目" style="margin: 24px 0;">
       <a-table :columns="hotQuestionsColumns" :data="hotQuestions" :pagination="false">
         <template #tags="{ record }">
-          <a-space wrap>
-            <a-tag v-for="(tag, index) of record.tags" :key="index" color="green">
-              {{ tag }}
-            </a-tag>
-          </a-space>
-        </template>
+        <a-space wrap>
+          <a-tag v-for="(tag, index) of getTags(record.tags)" :key="index" color="green">
+            {{ tag }}
+          </a-tag>
+        </a-space>
+      </template>
         <template #optional="{ record }">
           <a-button type="primary" size="small" @click="toQuestionPage(record)">
             做题
@@ -57,12 +57,12 @@
     <a-card title="最近更新" style="margin: 24px 0;">
       <a-table :columns="recentQuestionsColumns" :data="recentQuestions" :pagination="false">
         <template #tags="{ record }">
-          <a-space wrap>
-            <a-tag v-for="(tag, index) of record.tags" :key="index" color="blue">
-              {{ tag }}
-            </a-tag>
-          </a-space>
-        </template>
+        <a-space wrap>
+          <a-tag v-for="(tag, index) of getTags(record.tags)" :key="index" color="blue">
+            {{ tag }}
+          </a-tag>
+        </a-space>
+      </template>
         <template #createTime="{ record }">
           {{ moment(record.createTime).format("YYYY-MM-DD") }}
         </template>
@@ -82,6 +82,7 @@ import { useRouter } from "vue-router";
 import { QuestionControllerService, UserControllerService, QuestionSubmitControllerService } from "../../generated";
 import message from "@arco-design/web-vue/es/message";
 import moment from "moment";
+import { safeCellText } from "@/utils/safeRender";
 
 const router = useRouter();
 
@@ -104,41 +105,80 @@ interface Question {
   id: string;
   title: string;
   difficulty?: number;
-  tags: string[];
+  tags: any;
   submitNum: number;
   acceptedNum: number;
   createTime: string;
 }
 
+// 处理标签数据，确保返回字符串数组
+const getTags = (tags: any): string[] => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) {
+    return tags.map(tag => String(tag));
+  }
+  if (typeof tags === 'string') {
+    try {
+      // 尝试解析JSON字符串
+      const parsed = JSON.parse(tags);
+      return Array.isArray(parsed) ? parsed.map(tag => String(tag)) : [tags];
+    } catch {
+      // 如果不是有效的JSON，直接返回字符串作为单个标签
+      return [tags];
+    }
+  }
+  // 其他类型转换为字符串
+  return [String(tags)];
+};
+
 // 热门题目列配置
 const hotQuestionsColumns = [
   {
     title: "题号",
-    dataIndex: "id"
+    dataIndex: "id",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "题目名称",
     dataIndex: "title",
-    ellipsis: true
+    ellipsis: true,
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "标签",
     slotName: "tags",
-    ellipsis: true
+    ellipsis: true,
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "提交数",
-    dataIndex: "submitNum"
+    dataIndex: "submitNum",
+    customRender: ({ text }) => {
+      return safeCellText(Number(text || 0));
+    }
   },
   {
     title: "通过率",
     dataIndex: "acceptedRate",
     customRender: ({ record }: { record: Question }) => {
-      return `${record.acceptedNum ? Math.round((record.acceptedNum / record.submitNum) * 100) : 0}%`;
+      const acceptedNum = Number(record.acceptedNum || 0);
+      const submitNum = Number(record.submitNum || 0);
+      return `${submitNum > 0 ? Math.round((acceptedNum / submitNum) * 100) : 0}%`;
     }
   },
   {
-    slotName: "optional"
+    slotName: "optional",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   }
 ];
 
@@ -146,24 +186,42 @@ const hotQuestionsColumns = [
 const recentQuestionsColumns = [
   {
     title: "题号",
-    dataIndex: "id"
+    dataIndex: "id",
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "题目名称",
     dataIndex: "title",
-    ellipsis: true
+    ellipsis: true,
+    customRender: ({ text }) => {
+      return safeCellText(text);
+    }
   },
   {
     title: "标签",
     slotName: "tags",
-    ellipsis: true
+    ellipsis: true,
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "更新时间",
-    slotName: "createTime"
+    slotName: "createTime",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
-    slotName: "optional"
+    slotName: "optional",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   }
 ];
 

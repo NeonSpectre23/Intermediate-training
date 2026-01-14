@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, onUnmounted } from "vue";
 import {
   QuestionControllerService,
   QuestionVO,
@@ -100,6 +100,9 @@ import MdViewer from "@/components/MdViewer.vue";
 const props = defineProps<{
   id: string;
 }>();
+
+// 组件挂载状态，用于防止组件卸载后继续执行异步操作
+const isMounted = ref<boolean>(true);
 
 const question = ref<QuestionVO>();
 const submitting = ref<boolean>(false);
@@ -118,6 +121,7 @@ const form = ref<LocalSubmitForm>({
 });
 
 const loadData = async () => {
+  if (!isMounted.value) return;
   if (!props.id) {
     message.error("题目ID不能为空");
     return;
@@ -128,6 +132,7 @@ const loadData = async () => {
     const res = await QuestionControllerService.getQuestionVoByIdUsingGet(
       stringId
     );
+    if (!isMounted.value) return;
     if (res.code === 0 && res.data) {
       question.value = res.data as QuestionVO;
     } else {
@@ -135,6 +140,7 @@ const loadData = async () => {
       question.value = undefined;
     }
   } catch (error) {
+    if (!isMounted.value) return;
     message.error("请求失败，" + (error as Error).message);
     question.value = undefined;
   }
@@ -159,9 +165,17 @@ onMounted(() => {
 });
 
 /**
+ * 组件卸载时，清理状态
+ */
+onUnmounted(() => {
+  isMounted.value = false;
+});
+
+/**
  * 查询判题结果
  */
 const queryJudgeResult = async (submitId: number) => {
+  if (!isMounted.value) return null;
   try {
     // 使用类型断言将请求对象转换为any，因为后端API实际支持id参数但OpenAPI生成的类型定义中没有包含
     console.log("使用submitId查询判题结果:", submitId);
@@ -171,6 +185,7 @@ const queryJudgeResult = async (submitId: number) => {
       sortField: "createTime",
       sortOrder: "desc"
     } as any);
+    if (!isMounted.value) return null;
     if (res.code === 0 && res.data?.records?.length > 0) {
       console.log("查询到的判题结果:", res.data.records[0]);
       return res.data.records[0] as QuestionSubmitVO;
@@ -178,6 +193,7 @@ const queryJudgeResult = async (submitId: number) => {
       console.warn("未查询到判题结果:", res.data);
     }
   } catch (error) {
+    if (!isMounted.value) return null;
     message.error("查询判题结果失败，" + (error as Error).message);
   }
   return null;
@@ -193,13 +209,14 @@ const pollJudgeResult = async (submitId: number) => {
   const interval = 1000;
   
   // 只要结果是等待判题或判题中，就继续轮询
-  while ((!result || result.status === 0 || result.status === 1) && retryCount < maxRetry) {
+  while ((!result || result.status === 0 || result.status === 1) && retryCount < maxRetry && isMounted.value) {
     await new Promise(resolve => setTimeout(resolve, interval));
+    if (!isMounted.value) break;
     result = await queryJudgeResult(submitId);
     retryCount++;
   }
   
-  return result;
+  return isMounted.value ? result : null;
 };
 
 /**
@@ -318,6 +335,7 @@ const getStatusColor = (status?: number, judgeInfo?: any): string => {
  * 提交代码
  */
 const doSubmit = async () => {
+  if (!isMounted.value) return;
   if (!question.value?.id) {
     return;
   }
@@ -334,18 +352,33 @@ const doSubmit = async () => {
       questionId,
     });
     
+    if (!isMounted.value) {
+      submitting.value = false;
+      return;
+    }
+    
     if (res.code === 0 && res.data) {
       message.success("提交成功，正在判题...");
       const submitId = res.data as number;
       
       // 轮询获取判题结果
       const result = await pollJudgeResult(submitId);
+      if (!isMounted.value) {
+        submitting.value = false;
+        return;
+      }
+      
       if (result) {
         // 添加调试信息，查看实际获取到的结果
         console.log("获取到的判题结果:", result);
         
         // 直接从数据库中获取最新的判题结果，确保获取到的是最新的
         const latestResult = await queryJudgeResult(submitId);
+        if (!isMounted.value) {
+          submitting.value = false;
+          return;
+        }
+        
         if (latestResult) {
           console.log("最新的判题结果:", latestResult);
           judgeResult.value = latestResult;
@@ -361,9 +394,15 @@ const doSubmit = async () => {
       message.error("提交失败，" + res.message);
     }
   } catch (error) {
+    if (!isMounted.value) {
+      submitting.value = false;
+      return;
+    }
     message.error("提交失败，" + (error as Error).message);
   } finally {
-    submitting.value = false;
+    if (isMounted.value) {
+      submitting.value = false;
+    }
   }
 };
 

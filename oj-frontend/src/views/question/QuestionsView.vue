@@ -70,6 +70,7 @@ import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import moment from "moment";
 import axios from "axios";
+import { safeCellText } from "@/utils/safeRender";
 
 const tableRef = ref();
 
@@ -111,6 +112,7 @@ watchEffect(() => {
  */
 onMounted(() => {
   loadData();
+  loadFavorites();
 });
 
 // {id: "1", title: "A+ D", content: "新的题目内容", tags: "["二叉树"]", answer: "新的答案", submitNum: 0,…}
@@ -149,34 +151,50 @@ const columns = [
   {
     title: "题号",
     dataIndex: "id",
-    customRender: ({ text }) => {
-      return String(text);
+    customRender: ({ text }: { text: any }) => {
+      return safeCellText(text);
     }
   },
   {
     title: "题目名称",
     dataIndex: "title",
-    customRender: ({ text }) => {
-      return String(text);
+    customRender: ({ text }: { text: any }) => {
+      return safeCellText(text);
     }
   },
   {
     title: "标签",
     slotName: "tags",
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "通过率",
     slotName: "acceptedRate",
-    width: 120
+    width: 120,
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     title: "创建时间",
     slotName: "createTime",
-    width: 120
+    width: 120,
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
   {
     slotName: "optional",
-    width: 160
+    width: 160,
+    customRender: () => {
+      // 实际渲染由slot处理，这里添加空的customRender防止Arco Design直接渲染数据
+      return '';
+    }
   },
 ];
 
@@ -191,7 +209,7 @@ const router = useRouter();
 const store = useStore();
 
 // 收藏状态管理
-const favoriteIds = ref<Set<number>>(new Set());
+const favoriteIds = ref<Set<string>>(new Set());
 
 /**
  * 跳转到做题页面
@@ -207,7 +225,7 @@ const toQuestionPage = (question: Question) => {
  * 检查题目是否已收藏
  */
 const isFavorite = (questionId: string): boolean => {
-  return favoriteIds.value.has(Number(questionId));
+  return favoriteIds.value.has(questionId);
 };
 
 /**
@@ -306,8 +324,8 @@ const loadFavorites = async () => {
     if (!isMounted.value) return;
     
     if (res.data.code === 0) {
-      // 提取收藏的题目ID，并转换为number类型
-      const favoriteQuestionIds = res.data.data.records.map((item: any) => Number(item.id));
+      // 提取收藏的题目ID，并转换为string类型，避免精度丢失
+      const favoriteQuestionIds = res.data.data.records.map((item: any) => String(item.id));
       favoriteIds.value = new Set(favoriteQuestionIds);
     }
   } catch (error) {
@@ -319,10 +337,7 @@ const loadFavorites = async () => {
   }
 };
 
-// 页面加载时获取收藏状态
-onMounted(() => {
-  loadFavorites();
-});
+
 
 // 组件卸载时清理
 onUnmounted(() => {
