@@ -64,8 +64,8 @@
         <a-card v-if="judgeResult" title="判题结果" style="margin-top: 16px;">
           <a-descriptions :column="{ xs: 1, md: 2 }">
             <a-descriptions-item label="执行状态">
-              <a-tag :color="getStatusColor(judgeResult.status)">
-                {{ getStatusText(judgeResult.status) }}
+              <a-tag :color="getStatusColor(judgeResult.status, judgeResult.judgeInfo)" style="color: #000000 !important;">
+                <span style="color: #000000 !important;">{{ getStatusText(judgeResult.status, judgeResult.judgeInfo) }}</span>
               </a-tag>
             </a-descriptions-item>
             <a-descriptions-item label="执行信息">
@@ -164,12 +164,18 @@ onMounted(() => {
 const queryJudgeResult = async (submitId: number) => {
   try {
     // 使用类型断言将请求对象转换为any，因为后端API实际支持id参数但OpenAPI生成的类型定义中没有包含
+    console.log("使用submitId查询判题结果:", submitId);
     const res = await QuestionSubmitControllerService.listQuestionSubmitByPageUsingPost({
       pageSize: 1,
       id: submitId,
+      sortField: "createTime",
+      sortOrder: "desc"
     } as any);
     if (res.code === 0 && res.data?.records?.length > 0) {
+      console.log("查询到的判题结果:", res.data.records[0]);
       return res.data.records[0] as QuestionSubmitVO;
+    } else {
+      console.warn("未查询到判题结果:", res.data);
     }
   } catch (error) {
     message.error("查询判题结果失败，" + (error as Error).message);
@@ -186,7 +192,8 @@ const pollJudgeResult = async (submitId: number) => {
   const maxRetry = 30;
   const interval = 1000;
   
-  while (!result?.status && retryCount < maxRetry) {
+  // 只要结果是等待判题或判题中，就继续轮询
+  while ((!result || result.status === 0 || result.status === 1) && retryCount < maxRetry) {
     await new Promise(resolve => setTimeout(resolve, interval));
     result = await queryJudgeResult(submitId);
     retryCount++;
@@ -196,38 +203,114 @@ const pollJudgeResult = async (submitId: number) => {
 };
 
 /**
- * 根据状态码获取状态文本
+ * 根据状态码和judgeInfo获取状态文本
  */
-const getStatusText = (status?: number): string => {
+const getStatusText = (status?: number, judgeInfo?: any): string => {
+  // 添加调试信息
+  console.log("getStatusText参数:", status, judgeInfo);
+  
   if (!status) return '未知';
+  if (status === 0) return '等待判题';
+  if (status === 1) return '判题中';
+  
+  let message = '';
+  
+  // 处理judgeInfo，支持字符串和对象两种类型
+  if (typeof judgeInfo === 'string') {
+    try {
+      // 如果judgeInfo是字符串，尝试解析为对象
+      const info = JSON.parse(judgeInfo);
+      if (info.message) {
+        message = info.message.toLowerCase();
+      }
+    } catch (e) {
+      console.error("解析judgeInfo字符串失败:", e);
+      // 如果解析失败，直接使用字符串作为message
+      message = judgeInfo.toLowerCase();
+    }
+  } else if (judgeInfo && judgeInfo.message) {
+    // 如果judgeInfo是对象，直接使用message
+    message = judgeInfo.message.toLowerCase();
+  }
+  
+  // 优先根据message判断状态
+  if (message) {
+    if (message.includes('accepted')) return 'AC';
+    if (message.includes('wrong answer')) return 'WA';
+    if (message.includes('runtime error')) return 'RE';
+    if (message.includes('time limit exceeded') || message.includes('tle')) return 'TLE';
+    if (message.includes('memory limit exceeded') || message.includes('mle')) return 'MLE';
+    if (message.includes('compilation error') || message.includes('ce')) return 'CE';
+  }
+  
+  // 如果message判断失败，根据status判断
+  if (status === 2) return 'AC';
+  
+  // 默认映射
   const statusMap: Record<number, string> = {
-    0: '等待判题',
-    1: '判题中',
-    2: 'AC',
     3: 'WA',
     4: 'RE',
     5: 'TLE',
     6: 'MLE',
     7: 'CE'
   };
+  
   return statusMap[status] || `状态${status}`;
 };
 
 /**
- * 根据状态码获取标签颜色
+ * 根据状态码和judgeInfo获取标签颜色
  */
-const getStatusColor = (status?: number): string => {
+const getStatusColor = (status?: number, judgeInfo?: any): string => {
+  // 添加调试信息
+  console.log("getStatusColor参数:", status, judgeInfo);
+  
   if (!status) return 'default';
+  if (status === 0) return 'default';
+  if (status === 1) return 'processing';
+  
+  let message = '';
+  
+  // 处理judgeInfo，支持字符串和对象两种类型
+  if (typeof judgeInfo === 'string') {
+    try {
+      // 如果judgeInfo是字符串，尝试解析为对象
+      const info = JSON.parse(judgeInfo);
+      if (info.message) {
+        message = info.message.toLowerCase();
+      }
+    } catch (e) {
+      console.error("解析judgeInfo字符串失败:", e);
+      // 如果解析失败，直接使用字符串作为message
+      message = judgeInfo.toLowerCase();
+    }
+  } else if (judgeInfo && judgeInfo.message) {
+    // 如果judgeInfo是对象，直接使用message
+    message = judgeInfo.message.toLowerCase();
+  }
+  
+  // 优先根据message判断颜色
+  if (message) {
+    if (message.includes('accepted')) return 'success';
+    if (message.includes('wrong answer')) return 'warning';
+    if (message.includes('runtime error')) return 'danger';
+    if (message.includes('time limit exceeded') || message.includes('tle')) return 'danger';
+    if (message.includes('memory limit exceeded') || message.includes('mle')) return 'danger';
+    if (message.includes('compilation error') || message.includes('ce')) return 'danger';
+  }
+  
+  // 如果message判断失败，根据status判断
+  if (status === 2) return 'success';
+  
+  // 默认映射
   const colorMap: Record<number, string> = {
-    0: 'default',
-    1: 'processing',
-    2: 'success',
     3: 'warning',
     4: 'danger',
     5: 'danger',
     6: 'danger',
     7: 'danger'
   };
+  
   return colorMap[status] || 'default';
 };
 
@@ -258,8 +341,19 @@ const doSubmit = async () => {
       // 轮询获取判题结果
       const result = await pollJudgeResult(submitId);
       if (result) {
-        judgeResult.value = result;
-        message.success(`判题完成: ${result.status}`);
+        // 添加调试信息，查看实际获取到的结果
+        console.log("获取到的判题结果:", result);
+        
+        // 直接从数据库中获取最新的判题结果，确保获取到的是最新的
+        const latestResult = await queryJudgeResult(submitId);
+        if (latestResult) {
+          console.log("最新的判题结果:", latestResult);
+          judgeResult.value = latestResult;
+        } else {
+          judgeResult.value = result;
+        }
+        
+        message.success(`判题完成: ${getStatusText(judgeResult.value.status, judgeResult.value.judgeInfo)}`);
       } else {
         message.warning("判题超时，请稍后查看结果");
       }
@@ -286,11 +380,40 @@ const doSubmit = async () => {
   margin-bottom: 0 !important;
 }
 
-/* 移除浅色主题下标签文字颜色的强制设置，让组件使用默认的文字颜色逻辑 */
-/* Arco Design 会根据标签背景颜色自动调整文字颜色，确保良好的对比度 */
-:root:not([data-theme="dark"]) #viewQuestionView .arco-tag {
-  /* 移除强制继承的文字颜色，让组件使用默认的文字颜色逻辑 */
-  color: unset !important;
+/* 确保所有主题下所有标签文字颜色为黑色，使用最高优先级 */
+#viewQuestionView .arco-tag,
+#viewQuestionView .arco-tag span,
+#viewQuestionView .arco-tag-success,
+#viewQuestionView .arco-tag-success span,
+#viewQuestionView .arco-tag-warning,
+#viewQuestionView .arco-tag-warning span,
+#viewQuestionView .arco-tag-danger,
+#viewQuestionView .arco-tag-danger span,
+#viewQuestionView .arco-tag-default,
+#viewQuestionView .arco-tag-default span,
+#viewQuestionView .arco-tag-processing,
+#viewQuestionView .arco-tag-processing span,
+#viewQuestionView .arco-tag-custom-color,
+#viewQuestionView .arco-tag-custom-color span {
+  color: #000000 !important;
+}
+
+/* 确保所有主题下判题结果状态文字颜色为黑色 */
+#viewQuestionView .arco-tag {
+  color: #000000 !important;
+}
+
+/* 直接针对判题结果卡片中的状态标签，使用更高优先级 */
+a-card[title="判题结果"] a-tag,
+a-card[title="判题结果"] a-tag span {
+  color: #000000 !important;
+}
+
+/* 针对描述列表中的标签 */
+#viewQuestionView .arco-descriptions-item a-tag,
+#viewQuestionView .arco-descriptions-item a-tag span {
+  color: #000000 !important;
+  font-weight: bold;
 }
 
 /* 确保深色主题下卡片正确显示 */
@@ -303,7 +426,7 @@ const doSubmit = async () => {
 /* 确保深色主题下标签正确显示 */
 :root[data-theme="dark"] #viewQuestionView .arco-tag {
   background-color: #2d2d2d !important;
-  color: #ffffff !important;
+  color: #000000 !important;
   border-color: #333333 !important;
 }
 

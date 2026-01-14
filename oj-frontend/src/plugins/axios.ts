@@ -1,5 +1,23 @@
 // Add a request interceptor
 import axios from "axios";
+import JSONBigInt from "json-bigint";
+
+// 创建一个json-bigint实例，配置为将BigInt转换为字符串
+const jsonBigInt = JSONBigInt({
+  storeAsString: true
+});
+
+// 配置axios使用json-bigint来解析响应数据
+axios.defaults.transformResponse = [function (data) {
+  try {
+    // 使用json-bigint来解析JSON数据，避免大数字精度丢失
+    return jsonBigInt.parse(data);
+  } catch (e) {
+    // 如果解析失败，返回原始数据
+    return data;
+  }
+}];
+
 axios.defaults.withCredentials = true;
 axios.interceptors.request.use(
   function (config) {

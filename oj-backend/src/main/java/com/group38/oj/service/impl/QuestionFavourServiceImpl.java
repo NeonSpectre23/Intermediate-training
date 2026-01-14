@@ -33,11 +33,6 @@ public class QuestionFavourServiceImpl extends ServiceImpl<QuestionFavourMapper,
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int doQuestionFavour(long questionId, User loginUser) {
-        // 判断题目是否存在
-        Question question = questionService.getById(questionId);
-        if (question == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "题目不存在");
-        }
         long userId = loginUser.getId();
         // 查询是否已经收藏
         QueryWrapper<QuestionFavour> questionFavourQueryWrapper = new QueryWrapper<>();
@@ -48,7 +43,7 @@ public class QuestionFavourServiceImpl extends ServiceImpl<QuestionFavourMapper,
             // 已收藏，取消收藏
             result = this.removeById(oldFavour.getId());
             if (result) {
-                // 收藏数 - 1
+                // 收藏数 - 1（只有题目存在时才更新收藏数）
                 questionService.update()
                         .eq("id", questionId)
                         .gt("favourNum", 0)
@@ -60,6 +55,11 @@ public class QuestionFavourServiceImpl extends ServiceImpl<QuestionFavourMapper,
             }
         } else {
             // 未收藏，添加收藏
+            // 添加收藏时需要检查题目是否存在
+            Question question = questionService.getById(questionId);
+            if (question == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "题目不存在");
+            }
             QuestionFavour questionFavour = new QuestionFavour();
             questionFavour.setQuestionId(questionId);
             questionFavour.setUserId(userId);

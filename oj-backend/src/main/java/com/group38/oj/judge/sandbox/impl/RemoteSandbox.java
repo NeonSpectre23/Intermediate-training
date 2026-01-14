@@ -22,24 +22,44 @@ public class RemoteSandbox implements Sandbox {
 
     // Judge0 API地址
     private static final String JUDGE0_API_URL = "https://extra-ce.judge0.com/submissions/";
+    // Judge0语言列表API
+    private static final String JUDGE0_LANGUAGES_URL = "https://extra-ce.judge0.com/languages";
     // 语言ID映射，将我们的语言名称映射到Judge0的语言ID
-    private static final Map<String, Integer> LANGUAGE_ID_MAP = new HashMap<>();
+    private static Map<String, Integer> LANGUAGE_ID_MAP = new HashMap<>();
     
+    // 初始化默认语言ID映射
     static {
-        // 初始化语言ID映射，使用Judge0 API返回的最新语言ID
-        LANGUAGE_ID_MAP.put("java", 62);       // Java (OpenJDK 17.0.8)
-        LANGUAGE_ID_MAP.put("python", 71);     // Python 3.11.4
-        LANGUAGE_ID_MAP.put("python3", 71);    // Python 3.11.4
-        LANGUAGE_ID_MAP.put("python2", 68);    // Python 2.7.18
-        LANGUAGE_ID_MAP.put("c", 65);          // C (GCC 12.2.0)
-        LANGUAGE_ID_MAP.put("cpp", 64);        // C++ (GCC 12.2.0)
-        LANGUAGE_ID_MAP.put("c++", 64);        // C++ (GCC 12.2.0) - 别名
-        LANGUAGE_ID_MAP.put("csharp", 69);     // C# (Mono 6.12.0.182)
-        LANGUAGE_ID_MAP.put("c#", 69);         // C# (Mono 6.12.0.182) - 别名
-        LANGUAGE_ID_MAP.put("go", 60);         // Go (1.20.3)
-        LANGUAGE_ID_MAP.put("javascript", 91);  // JavaScript (Node.js 18.15.0)
-        LANGUAGE_ID_MAP.put("typescript", 92);  // TypeScript (5.0.3)
-        LANGUAGE_ID_MAP.put("rust", 73);       // Rust (1.71.0)
+        // 设置默认映射，同时添加常见的Python版本映射作为备选
+        Map<String, Integer> defaultMap = new HashMap<>();
+        defaultMap.put("java", 62);       // Java (OpenJDK 17.0.8)
+        defaultMap.put("python", 71);     // Python 3.8（常见Judge0支持）
+        defaultMap.put("python3", 71);    // Python 3.8（常见Judge0支持）
+        defaultMap.put("python3.8", 71);  // Python 3.8
+        defaultMap.put("python3.10", 76); // Python 3.10
+        defaultMap.put("python3.11", 92); // Python 3.11
+        defaultMap.put("python2", 68);    // Python 2.7.18
+        defaultMap.put("c", 65);          // C (GCC 12.2.0)
+        defaultMap.put("cpp", 64);        // C++ (GCC 12.2.0)
+        defaultMap.put("c++", 64);        // C++ (GCC 12.2.0) - 别名
+        defaultMap.put("csharp", 69);     // C# (Mono 6.12.0.182)
+        defaultMap.put("c#", 69);         // C# (Mono 6.12.0.182) - 别名
+        defaultMap.put("go", 60);         // Go (1.20.3)
+        defaultMap.put("javascript", 91);  // JavaScript (Node.js 18.15.0)
+        defaultMap.put("typescript", 92);  // TypeScript (5.0.3)
+        defaultMap.put("rust", 73);       // Rust (1.71.0)
+        
+        // 尝试动态获取当前Judge0实例支持的语言列表
+        try {
+            LANGUAGE_ID_MAP = getSupportedLanguages();
+            if (LANGUAGE_ID_MAP.isEmpty()) {
+                // 如果动态获取失败，使用默认映射
+                LANGUAGE_ID_MAP = defaultMap;
+            }
+        } catch (Exception e) {
+            // 如果获取语言列表失败，使用默认映射
+            System.err.println("获取Judge0支持的语言列表失败，使用默认映射：" + e.getMessage());
+            LANGUAGE_ID_MAP = defaultMap;
+        }
     }
 
     @Override
@@ -142,6 +162,9 @@ public class RemoteSandbox implements Sandbox {
                 // 添加输出结果
                 if (testCaseResponse.getOutputList() != null && !testCaseResponse.getOutputList().isEmpty()) {
                     finalResponse.getOutputList().addAll(testCaseResponse.getOutputList());
+                } else {
+                    // 确保每个测试用例至少有一个输出，避免后续判题策略因为输出数量不匹配而判为WA
+                    finalResponse.getOutputList().add("");
                 }
             }
             
@@ -161,7 +184,20 @@ public class RemoteSandbox implements Sandbox {
             return finalResponse;
         } catch (Exception e) {
             e.printStackTrace();
-            return getErrorResponse("调用Judge0 API失败：" + e.getMessage());
+            String errorMessage = e.getMessage();
+            
+            // 特殊处理语言ID错误
+            if (errorMessage != null && (errorMessage.contains("language with id") || errorMessage.contains("422") || errorMessage.contains("Unprocessable Entity"))) {
+                // 语言ID错误，返回系统错误，而不是WA
+                return getSystemErrorResponse("Judge0 API不支持该语言ID：" + languageId + "，错误信息：" + errorMessage);
+            }
+            
+            // 确保输出列表不为空，避免后续判题策略因为输出数量不匹配而判为WA
+            for (int i = 0; i < inputList.size(); i++) {
+                finalResponse.getOutputList().add("");
+            }
+            
+            return getErrorResponse("调用Judge0 API失败：" + errorMessage);
         }
     }
 
@@ -292,10 +328,100 @@ public class RemoteSandbox implements Sandbox {
      */
     private ExecCodeResponse getErrorResponse(String message) {
         ExecCodeResponse execCodeResponse = new ExecCodeResponse();
-        execCodeResponse.setStatus(3); // 3表示失败
+        execCodeResponse.setStatus(3); // 3表示代码错误（WA）
         execCodeResponse.setMessage(message);
         execCodeResponse.setOutputList(new ArrayList<>()); // 初始化outputList
         execCodeResponse.setJudgeInfo(new JudgeInfo());
         return execCodeResponse;
+    }
+    
+    /**
+     * 获取系统错误响应
+     */
+    private ExecCodeResponse getSystemErrorResponse(String message) {
+        ExecCodeResponse execCodeResponse = new ExecCodeResponse();
+        execCodeResponse.setStatus(2); // 2表示系统错误
+        execCodeResponse.setMessage(message);
+        execCodeResponse.setOutputList(new ArrayList<>()); // 初始化outputList
+        execCodeResponse.setJudgeInfo(new JudgeInfo());
+        return execCodeResponse;
+    }
+    
+    /**
+     * 动态获取Judge0支持的语言列表
+     * @return 语言ID映射
+     */
+    private static Map<String, Integer> getSupportedLanguages() {
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Integer> languageMap = new HashMap<>();
+        
+        try {
+            // 发送GET请求获取语言列表
+            ResponseEntity<List> responseEntity = restTemplate.getForEntity(
+                    JUDGE0_LANGUAGES_URL,
+                    List.class
+            );
+            
+            List<Map<String, Object>> languages = responseEntity.getBody();
+            if (languages == null) {
+                System.err.println("获取Judge0语言列表返回空");
+                return languageMap;
+            }
+            
+            System.out.println("获取到Judge0支持的语言列表，共" + languages.size() + "种语言");
+            
+            // 遍历语言列表，构建映射
+            for (Map<String, Object> language : languages) {
+                Integer id = (Integer) language.get("id");
+                String name = (String) language.get("name");
+                String slug = (String) language.get("slug");
+                
+                if (id == null || name == null) {
+                    continue;
+                }
+                
+                System.out.println("语言: " + name + " (slug: " + slug + ", id: " + id + ")");
+                
+                // 添加多种映射方式
+                if (name != null) {
+                    // 精确匹配
+                    languageMap.put(name.toLowerCase(), id);
+                    
+                    // 处理Python版本
+                    if (name.startsWith("Python")) {
+                        // 添加python映射
+                        languageMap.put("python", id);
+                        languageMap.put("python3", id);
+                        
+                        // 提取版本号，如Python 3.8 -> python3.8
+                        String[] nameParts = name.split(" ");
+                        if (nameParts.length > 1) {
+                            String version = nameParts[1].toLowerCase();
+                            languageMap.put("python" + version.replace(".", ""), id);
+                            languageMap.put("python" + version, id);
+                        }
+                    }
+                }
+                
+                // 基于slug的映射
+                if (slug != null) {
+                    languageMap.put(slug.toLowerCase(), id);
+                    
+                    // 处理python slug
+                    if (slug.startsWith("python")) {
+                        languageMap.put("python", id);
+                        languageMap.put("python3", id);
+                    }
+                }
+            }
+            
+            System.out.println("构建的语言ID映射: " + languageMap);
+            
+        } catch (Exception e) {
+            System.err.println("获取Judge0语言列表失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return languageMap;
     }
 }

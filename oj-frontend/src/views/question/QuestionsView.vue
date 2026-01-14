@@ -27,7 +27,7 @@
     >
       <template #tags="{ record }">
         <a-space wrap>
-          <a-tag v-for="(tag, index) of record.tags" :key="index" color="green">
+          <a-tag v-for="(tag, index) of getTags(record.tags)" :key="index" color="green">
             {{ tag }}
           </a-tag>
         </a-space>
@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from "vue";
+import { onMounted, ref, watchEffect, onUnmounted } from "vue";
 import {
   QuestionControllerService,
   QuestionQueryRequest,
@@ -75,6 +75,8 @@ const tableRef = ref();
 
 const dataList = ref([]);
 const total = ref(0);
+// 组件挂载状态，用于防止组件卸载后继续执行异步操作
+const isMounted = ref(true);
 const searchParams = ref<QuestionQueryRequest>({
   title: "",
   tags: [],
@@ -86,6 +88,9 @@ const loadData = async () => {
   const res = await QuestionControllerService.listQuestionVoByPageUsingPost(
     searchParams.value
   );
+  // 检查组件是否仍在挂载状态
+  if (!isMounted.value) return;
+  
   if (res.code === 0) {
     dataList.value = res.data.records;
     total.value = res.data.total;
@@ -114,20 +119,46 @@ onMounted(() => {
 interface Question {
   id: string;
   title: string;
-  tags: string[];
+  tags: any;
   submitNum: number;
   acceptedNum: number;
   createTime: string;
 }
 
+// 处理标签数据，确保返回字符串数组
+const getTags = (tags: any): string[] => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) {
+    return tags.map(tag => String(tag));
+  }
+  if (typeof tags === 'string') {
+    try {
+      // 尝试解析JSON字符串
+      const parsed = JSON.parse(tags);
+      return Array.isArray(parsed) ? parsed.map(tag => String(tag)) : [tags];
+    } catch {
+      // 如果不是有效的JSON，直接返回字符串作为单个标签
+      return [tags];
+    }
+  }
+  // 其他类型转换为字符串
+  return [String(tags)];
+};
+
 const columns = [
   {
     title: "题号",
     dataIndex: "id",
+    customRender: ({ text }) => {
+      return String(text);
+    }
   },
   {
     title: "题目名称",
     dataIndex: "title",
+    customRender: ({ text }) => {
+      return String(text);
+    }
   },
   {
     title: "标签",
@@ -184,6 +215,9 @@ const isFavorite = (questionId: string): boolean => {
  */
 const toggleFavorite = async (question: Question) => {
   try {
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     // 检查store对象是否存在
     if (!store) {
       console.error("Store对象未定义");
@@ -221,6 +255,9 @@ const toggleFavorite = async (question: Question) => {
       questionId: questionId
     });
     
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     if (res.data.code === 0) {
       if (isFavorite(question.id)) {
         // 取消收藏成功
@@ -235,6 +272,9 @@ const toggleFavorite = async (question: Question) => {
       message.error(res.data.message || "操作失败");
     }
   } catch (error) {
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     console.error("切换收藏状态失败：", error);
     message.error("操作失败：" + (error as Error).message);
   }
@@ -245,6 +285,9 @@ const toggleFavorite = async (question: Question) => {
  */
 const loadFavorites = async () => {
   try {
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     // 检查是否登录
     if (!store) return;
     const userModule = store.state?.user;
@@ -259,12 +302,18 @@ const loadFavorites = async () => {
       pageSize: 100 // 获取所有收藏的题目
     });
     
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     if (res.data.code === 0) {
       // 提取收藏的题目ID，并转换为number类型
       const favoriteQuestionIds = res.data.data.records.map((item: any) => Number(item.id));
       favoriteIds.value = new Set(favoriteQuestionIds);
     }
   } catch (error) {
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     console.error("加载收藏状态失败：", error);
     // 不显示错误信息，避免影响用户体验
   }
@@ -273,6 +322,11 @@ const loadFavorites = async () => {
 // 页面加载时获取收藏状态
 onMounted(() => {
   loadFavorites();
+});
+
+// 组件卸载时清理
+onUnmounted(() => {
+  isMounted.value = false;
 });
 
 /**

@@ -16,7 +16,7 @@
     >
       <template #tags="{ record }">
         <a-space wrap>
-          <a-tag v-for="(tag, index) of record.tags" :key="index" color="green">
+          <a-tag v-for="(tag, index) of getTags(record.tags)" :key="index" color="green">
             {{ tag }}
           </a-tag>
         </a-space>
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import message from "@arco-design/web-vue/es/message";
 import moment from "moment";
@@ -44,7 +44,7 @@ const router = useRouter();
 interface Question {
   id: string;
   title: string;
-  tags: string[];
+  tags: any;
   createTime: string;
   acceptedNum?: number;
   submitNum?: number;
@@ -53,6 +53,9 @@ interface Question {
 // 收藏题目列表
 const favorites = ref<Question[]>([]);
 const total = ref(0);
+
+// 组件挂载状态，用于防止组件卸载后继续执行异步操作
+const isMounted = ref(true);
 
 // 搜索参数
 const searchParams = ref({
@@ -64,12 +67,18 @@ const searchParams = ref({
 const columns = [
   {
     title: "题号",
-    dataIndex: "id"
+    dataIndex: "id",
+    customRender: ({ text }) => {
+      return String(text);
+    }
   },
   {
     title: "题目名称",
     dataIndex: "title",
-    ellipsis: true
+    ellipsis: true,
+    customRender: ({ text }) => {
+      return String(text);
+    }
   },
   {
     title: "标签",
@@ -80,21 +89,26 @@ const columns = [
     title: "通过率",
     dataIndex: "acceptedNum",
     customRender: ({ record }: { record: Question }) => {
-      if (!record.acceptedNum || !record.submitNum || record.submitNum === 0) {
+      const acceptedNum = Number(record.acceptedNum) || 0;
+      const submitNum = Number(record.submitNum) || 0;
+      if (submitNum === 0) {
         return "0%";
       }
-      return ((record.acceptedNum / record.submitNum) * 100).toFixed(2) + "%";
+      return ((acceptedNum / submitNum) * 100).toFixed(2) + "%";
     }
   },
   {
     title: "提交数",
-    dataIndex: "submitNum"
+    dataIndex: "submitNum",
+    customRender: ({ text }) => {
+      return Number(text) || 0;
+    }
   },
   {
     title: "收藏时间",
     dataIndex: "createTime",
-    customRender: ({ record }: { record: Question }) => {
-      return moment(record.createTime).format("YYYY-MM-DD");
+    customRender: ({ text }) => {
+      return moment(text).format("YYYY-MM-DD");
     }
   },
   {
@@ -107,6 +121,26 @@ const toQuestionPage = (questionId?: string) => {
   if (questionId) {
     router.push(`/view/question/${questionId}`);
   }
+};
+
+// 处理标签数据，确保返回字符串数组
+const getTags = (tags: any): string[] => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) {
+    return tags.map(tag => String(tag));
+  }
+  if (typeof tags === 'string') {
+    try {
+      // 尝试解析JSON字符串
+      const parsed = JSON.parse(tags);
+      return Array.isArray(parsed) ? parsed.map(tag => String(tag)) : [tags];
+    } catch {
+      // 如果不是有效的JSON，直接返回字符串作为单个标签
+      return [tags];
+    }
+  }
+  // 其他类型转换为字符串
+  return [String(tags)];
 };
 
 // 移除收藏
@@ -144,6 +178,9 @@ const loadFavorites = async () => {
       current: searchParams.value.current,
       pageSize: searchParams.value.pageSize
     });
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     if (res.data.code === 0) {
       favorites.value = res.data.data.records;
       total.value = res.data.data.total;
@@ -151,6 +188,9 @@ const loadFavorites = async () => {
       message.error("加载收藏列表失败：" + res.data.message);
     }
   } catch (error) {
+    // 检查组件是否仍在挂载状态
+    if (!isMounted.value) return;
+    
     console.error("加载收藏列表异常：", error);
     message.error("加载收藏列表失败：" + (error as Error).message);
   }
@@ -159,6 +199,11 @@ const loadFavorites = async () => {
 // 页面加载时获取数据
 onMounted(() => {
   loadFavorites();
+});
+
+// 组件卸载时清理
+onUnmounted(() => {
+  isMounted.value = false;
 });
 </script>
 
