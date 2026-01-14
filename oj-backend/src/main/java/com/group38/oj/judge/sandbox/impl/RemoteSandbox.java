@@ -27,15 +27,19 @@ public class RemoteSandbox implements Sandbox {
     
     static {
         // 初始化语言ID映射，使用Judge0 API返回的最新语言ID
-        LANGUAGE_ID_MAP.put("java", 4);        // Java (OpenJDK 14.0.1)
-        LANGUAGE_ID_MAP.put("python", 28);     // Python 3.10 (PyPy 7.3.12)
-        LANGUAGE_ID_MAP.put("python2", 26);    // Python 2.7 (PyPy 7.3.12)
-        LANGUAGE_ID_MAP.put("c++", 2);         // C++ (Clang 10.0.1)
-        LANGUAGE_ID_MAP.put("c", 1);          // C (Clang 10.0.1)
-        LANGUAGE_ID_MAP.put("c#", 22);         // C# (Mono 6.12.0.122)
-        LANGUAGE_ID_MAP.put("f#", 24);         // F# (.NET Core SDK 3.1.406)
-        LANGUAGE_ID_MAP.put("csharp", 22);     // C# (Mono 6.12.0.122) - 别名
-        LANGUAGE_ID_MAP.put("cpp", 2);         // C++ (Clang 10.0.1) - 别名
+        LANGUAGE_ID_MAP.put("java", 62);       // Java (OpenJDK 17.0.8)
+        LANGUAGE_ID_MAP.put("python", 71);     // Python 3.11.4
+        LANGUAGE_ID_MAP.put("python3", 71);    // Python 3.11.4
+        LANGUAGE_ID_MAP.put("python2", 68);    // Python 2.7.18
+        LANGUAGE_ID_MAP.put("c", 65);          // C (GCC 12.2.0)
+        LANGUAGE_ID_MAP.put("cpp", 64);        // C++ (GCC 12.2.0)
+        LANGUAGE_ID_MAP.put("c++", 64);        // C++ (GCC 12.2.0) - 别名
+        LANGUAGE_ID_MAP.put("csharp", 69);     // C# (Mono 6.12.0.182)
+        LANGUAGE_ID_MAP.put("c#", 69);         // C# (Mono 6.12.0.182) - 别名
+        LANGUAGE_ID_MAP.put("go", 60);         // Go (1.20.3)
+        LANGUAGE_ID_MAP.put("javascript", 91);  // JavaScript (Node.js 18.15.0)
+        LANGUAGE_ID_MAP.put("typescript", 92);  // TypeScript (5.0.3)
+        LANGUAGE_ID_MAP.put("rust", 73);       // Rust (1.71.0)
     }
 
     @Override
@@ -57,11 +61,17 @@ public class RemoteSandbox implements Sandbox {
         String base64SourceCode = Base64.getEncoder().encodeToString(sourceCode.getBytes());
         
         // 获取语言ID
-        String language = execCodeRequest.getLang().toLowerCase();
-        Integer languageId = LANGUAGE_ID_MAP.get(language);
-        if (languageId == null) {
+        String language = execCodeRequest.getLang();
+        Integer languageId;
+        if (language == null || language.isEmpty()) {
             // 默认使用Java
-            languageId = 4;
+            languageId = 62;
+        } else {
+            languageId = LANGUAGE_ID_MAP.get(language.toLowerCase());
+            if (languageId == null) {
+                // 默认使用Java
+                languageId = 62;
+            }
         }
         
         // 设置wait=true和base64_encoded=true
