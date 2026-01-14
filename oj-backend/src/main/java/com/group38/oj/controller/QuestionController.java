@@ -11,7 +11,6 @@ import com.group38.oj.constant.UserConstant;
 import com.group38.oj.exception.BusinessException;
 import com.group38.oj.exception.ThrowUtils;
 import com.group38.oj.model.dto.question.*;
-import com.group38.oj.model.dto.user.UserQueryRequest;
 import com.group38.oj.model.entity.Question;
 import com.group38.oj.model.entity.User;
 import com.group38.oj.model.vo.QuestionVO;
@@ -87,19 +86,20 @@ public class QuestionController {
      */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteQuestion(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+        if (deleteRequest == null || deleteRequest.getId() == null || deleteRequest.getId().isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        // 将字符串ID转换为Long，避免精度丢失
+        Long questionId = Long.parseLong(deleteRequest.getId());
         User user = userService.getLoginUser(request);
-        long id = deleteRequest.getId();
         // 判断是否存在
-        Question oldQuestion = questionService.getById(id);
+        Question oldQuestion = questionService.getById(questionId);
         ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可删除
         if (!oldQuestion.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
-        boolean b = questionService.removeById(id);
+        boolean b = questionService.removeById(questionId);
         return ResultUtils.success(b);
     }
 
@@ -112,11 +112,14 @@ public class QuestionController {
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionUpdateRequest questionUpdateRequest) {
-        if (questionUpdateRequest == null || questionUpdateRequest.getId() <= 0) {
+        if (questionUpdateRequest == null || questionUpdateRequest.getId() == null || questionUpdateRequest.getId().isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Question question = new Question();
-        BeanUtils.copyProperties(questionUpdateRequest, question);
+        // 先复制非id字段
+        BeanUtils.copyProperties(questionUpdateRequest, question, "id");
+        // 将String类型的id转换为Long类型
+        question.setId(Long.parseLong(questionUpdateRequest.getId()));
         List<String> tags = questionUpdateRequest.getTags();
         if (tags != null) {
             question.setTags(JSONUtil.toJsonStr(tags));
@@ -131,9 +134,8 @@ public class QuestionController {
         }
         // 参数校验
         questionService.validQuestion(question, false);
-        long id = questionUpdateRequest.getId();
         // 判断是否存在
-        Question oldQuestion = questionService.getById(id);
+        Question oldQuestion = questionService.getById(question.getId());
         ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
         boolean result = questionService.updateById(question);
         return ResultUtils.success(result);
@@ -146,11 +148,13 @@ public class QuestionController {
      * @return
      */
     @GetMapping("/get")
-    public BaseResponse<Question> getQuestionById(long id, HttpServletRequest request) {
-        if (id <= 0) {
+    public BaseResponse<Question> getQuestionById(String id, HttpServletRequest request) {
+        if (id == null || id.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Question question = questionService.getById(id);
+        // 将字符串ID转换为Long，避免精度丢失
+        Long questionId = Long.parseLong(id);
+        Question question = questionService.getById(questionId);
         if (question == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
@@ -169,11 +173,13 @@ public class QuestionController {
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<QuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
-        if (id <= 0) {
+    public BaseResponse<QuestionVO> getQuestionVOById(String id, HttpServletRequest request) {
+        if (id == null || id.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Question question = questionService.getById(id);
+        // 将字符串ID转换为Long，避免精度丢失
+        Long questionId = Long.parseLong(id);
+        Question question = questionService.getById(questionId);
         if (question == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
@@ -230,7 +236,8 @@ public class QuestionController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
-        questionQueryRequest.setUserId(loginUser.getId());
+        // 将Long类型的userId转换为String类型，避免类型不匹配
+        questionQueryRequest.setUserId(String.valueOf(loginUser.getId()));
         long current = questionQueryRequest.getCurrent();
         long size = questionQueryRequest.getPageSize();
         // 限制爬虫
@@ -251,11 +258,14 @@ public class QuestionController {
      */
     @PostMapping("/edit")
     public BaseResponse<Boolean> editQuestion(@RequestBody QuestionEditRequest questionEditRequest, HttpServletRequest request) {
-        if (questionEditRequest == null || questionEditRequest.getId() <= 0) {
+        if (questionEditRequest == null || questionEditRequest.getId() == null || questionEditRequest.getId().isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Question question = new Question();
-        BeanUtils.copyProperties(questionEditRequest, question);
+        // 先复制非id字段
+        BeanUtils.copyProperties(questionEditRequest, question, "id");
+        // 将String类型的id转换为Long类型
+        question.setId(Long.parseLong(questionEditRequest.getId()));
         List<String> tags = questionEditRequest.getTags();
         if (tags != null) {
             question.setTags(JSONUtil.toJsonStr(tags));
@@ -271,9 +281,8 @@ public class QuestionController {
         // 参数校验
         questionService.validQuestion(question, false);
         User loginUser = userService.getLoginUser(request);
-        long id = questionEditRequest.getId();
         // 判断是否存在
-        Question oldQuestion = questionService.getById(id);
+        Question oldQuestion = questionService.getById(question.getId());
         ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
         if (!oldQuestion.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {

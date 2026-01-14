@@ -1,6 +1,7 @@
 package com.group38.oj.model.vo;
 
 import cn.hutool.json.JSONUtil;
+import com.group38.oj.model.dto.question.JudgeCase;
 import com.group38.oj.model.dto.question.JudgeConfig;
 import com.group38.oj.model.entity.Question;
 import lombok.Data;
@@ -20,7 +21,7 @@ public class QuestionVO implements Serializable {
     /**
      * id
      */
-    private Long id;
+    private String id;
 
     /**
      * 标题
@@ -48,6 +49,11 @@ public class QuestionVO implements Serializable {
     private Integer acceptedNum;
 
     /**
+     * 判题用例（json 数组）
+     */
+    private List<JudgeCase> judgeCase;
+
+    /**
      * 判题配置（json 对象）
      */
     private JudgeConfig judgeConfig;
@@ -65,7 +71,7 @@ public class QuestionVO implements Serializable {
     /**
      * 创建用户 id
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 创建时间
@@ -93,10 +99,22 @@ public class QuestionVO implements Serializable {
             return null;
         }
         Question question = new Question();
-        BeanUtils.copyProperties(questionVO, question);
+        // 先复制非id字段
+        BeanUtils.copyProperties(questionVO, question, "id", "userId");
+        // 将String类型的id转换为Long类型
+        if (questionVO.getId() != null) {
+            question.setId(Long.parseLong(questionVO.getId()));
+        }
+        if (questionVO.getUserId() != null) {
+            question.setUserId(Long.parseLong(questionVO.getUserId()));
+        }
         List<String> tagList = questionVO.getTags();
         if (tagList != null) {
             question.setTags(JSONUtil.toJsonStr(tagList));
+        }
+        List<JudgeCase> judgeCaseList = questionVO.getJudgeCase();
+        if (judgeCaseList != null) {
+            question.setJudgeCase(JSONUtil.toJsonStr(judgeCaseList));
         }
         JudgeConfig judgeConfig = questionVO.getJudgeConfig();
         if (judgeConfig != null) {
@@ -117,8 +135,13 @@ public class QuestionVO implements Serializable {
         }
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
+        // 将Long类型的id转换为String类型，避免JavaScript中的精度丢失问题
+        questionVO.setId(String.valueOf(question.getId()));
+        questionVO.setUserId(String.valueOf(question.getUserId()));
         List<String> tagList = JSONUtil.toList(question.getTags(), String.class);
         questionVO.setTags(tagList);
+        String judgeCaseStr = question.getJudgeCase();
+        questionVO.setJudgeCase(JSONUtil.toList(judgeCaseStr, JudgeCase.class));
         String judgeConfigStr = question.getJudgeConfig();
         questionVO.setJudgeConfig(JSONUtil.toBean(judgeConfigStr, JudgeConfig.class));
         return questionVO;

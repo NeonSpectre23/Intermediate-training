@@ -9,12 +9,12 @@ export type PostVO = {
     favourNum?: number;
     hasFavour?: boolean;
     hasThumb?: boolean;
-    id?: number;
+    id?: string;
     tagList?: Array<string>;
     thumbNum?: number;
     title?: string;
     updateTime?: string;
     user?: UserVO;
-    userId?: number;
+    userId?: string;
 };
 

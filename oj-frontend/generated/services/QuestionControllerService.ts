@@ -87,7 +87,7 @@ export class QuestionControllerService {
      * @throws ApiError
      */
     public static getQuestionByIdUsingGet(
-        id?: number,
+        id?: string,
     ): CancelablePromise<BaseResponse_Question_> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -109,7 +109,7 @@ export class QuestionControllerService {
      * @throws ApiError
      */
     public static getQuestionVoByIdUsingGet(
-        id?: number,
+        id?: string,
     ): CancelablePromise<BaseResponse_QuestionVO_> {
         return __request(OpenAPI, {
             method: 'GET',

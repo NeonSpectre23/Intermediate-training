@@ -25,12 +25,10 @@
 <script setup lang="ts">
 import { onMounted, ref, watchEffect } from "vue";
 import {
-  Page_Question_,
   Question,
   QuestionControllerService,
 } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
-import * as querystring from "querystring";
 import { useRouter } from "vue-router";
 
 const tableRef = ref();
@@ -43,7 +41,7 @@ const searchParams = ref({
 });
 
 const loadData = async () => {
-  const res = await QuestionControllerService.listQuestionByPageUsingPost(
+  const res = await QuestionControllerService.listQuestionVoByPageUsingPost(
     searchParams.value
   );
   if (res.code === 0) {
@@ -130,7 +128,7 @@ const onPageChange = (page: number) => {
 
 const doDelete = async (question: Question) => {
   const res = await QuestionControllerService.deleteQuestionUsingPost({
-    id: question.id,
+    id: question.id ? Number(question.id) : undefined,
   });
   if (res.code === 0) {
     message.success("删除成功");
@@ -154,5 +152,8 @@ const doUpdate = (question: Question) => {
 
 <style scoped>
 #manageQuestionView {
+  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 </style>

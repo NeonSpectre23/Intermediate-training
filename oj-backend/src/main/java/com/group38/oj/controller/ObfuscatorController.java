@@ -12,7 +12,6 @@ import com.group38.oj.obfuscator.strategy.ObfuscatorContext;
 import com.group38.oj.obfuscator.strategy.ObfuscatorStrategy;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;

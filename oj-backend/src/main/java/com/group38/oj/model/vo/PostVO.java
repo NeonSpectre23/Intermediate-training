@@ -20,7 +20,7 @@ public class PostVO implements Serializable {
     /**
      * id
      */
-    private Long id;
+    private String id;
 
     /**
      * 标题
@@ -45,7 +45,7 @@ public class PostVO implements Serializable {
     /**
      * 创建用户 id
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 创建时间
@@ -88,9 +88,17 @@ public class PostVO implements Serializable {
             return null;
         }
         Post post = new Post();
-        BeanUtils.copyProperties(postVO, post);
+        // 先复制非id字段
+        BeanUtils.copyProperties(postVO, post, "id", "userId");
         List<String> tagList = postVO.getTagList();
         post.setTags(JSONUtil.toJsonStr(tagList));
+        // 将String类型的id转换为Long类型
+        if (postVO.getId() != null) {
+            post.setId(Long.parseLong(postVO.getId()));
+        }
+        if (postVO.getUserId() != null) {
+            post.setUserId(Long.parseLong(postVO.getUserId()));
+        }
         return post;
     }
 
@@ -106,6 +114,9 @@ public class PostVO implements Serializable {
         }
         PostVO postVO = new PostVO();
         BeanUtils.copyProperties(post, postVO);
+        // 将Long类型的id转换为String类型，避免JavaScript中的精度丢失问题
+        postVO.setId(String.valueOf(post.getId()));
+        postVO.setUserId(String.valueOf(post.getUserId()));
         postVO.setTagList(JSONUtil.toList(post.getTags(), String.class));
         return postVO;
     }

@@ -36,7 +36,9 @@ public class JavaStrategy implements JudgeStrategy {
         }
 
         for (int i = 0; i < list.size(); i++) {
-            if (list.get(i).getOutput().equals(outputList.get(i))) {
+            String expectedOutput = list.get(i).getOutput().trim();
+            String actualOutput = outputList.get(i).trim();
+            if (!expectedOutput.equals(actualOutput)) {
                 judgeInfoMessageEnum = JudgeInfoMessageEnum.WRONG_ANSWER;
                 judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
                 return judgeInfoResponse;

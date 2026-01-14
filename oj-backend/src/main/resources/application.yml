@@ -20,7 +20,7 @@ spring:
   # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/OJ
+    url: jdbc:mysql://localhost:3306/OJ?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: root
   # Redis 配置
@@ -51,6 +51,13 @@ server:
     session:
       cookie:
         max-age: 2592000
+  # 响应编码配置
+  tomcat:
+    uri-encoding: UTF-8
+  encoding:
+    charset: UTF-8
+    enabled: true
+    force: true
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -91,7 +98,7 @@ cos:
     bucket: xxx
 # 代码沙箱配置
 sandbox:
-  type: example
+  type: remote
 ## 接口文档配置
 knife4j:
   enable: true

@@ -13,6 +13,7 @@ import com.group38.oj.model.dto.question.JudgeCase;
 import com.group38.oj.judge.sandbox.model.JudgeInfo;
 import com.group38.oj.model.entity.Question;
 import com.group38.oj.model.entity.QuestionSubmit;
+import com.group38.oj.model.enums.JudgeInfoMessageEnum;
 import com.group38.oj.model.enums.QuestionSubmitStatusEnum;
 import com.group38.oj.service.QuestionService;
 import com.group38.oj.service.QuestionSubmitService;
@@ -89,15 +90,36 @@ public class JudgeServiceImpl implements JudgeService {
 
         JudgeInfo judgeInfo = judgeManager.exec(judgeContext);
 
-        // 更新题目状态
+        // 更新题目提交状态
         questionSubmitUpdate = new QuestionSubmit();
         questionSubmitUpdate.setId(questionSubmitId);
-        questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.ACCEPTED.getValue());
+        // 根据判题结果设置状态
+        Integer status;
+        if (JudgeInfoMessageEnum.ACCEPTED.getValue().equals(judgeInfo.getMessage())) {
+            status = QuestionSubmitStatusEnum.ACCEPTED.getValue();
+        } else {
+            status = QuestionSubmitStatusEnum.REJECTED.getValue();
+        }
+        questionSubmitUpdate.setStatus(status);
         questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
         update = questionSubmitService.updateById(questionSubmitUpdate);
         if (!update) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "题目状态更新失败");
         }
-        return questionSubmitService.getById(questionId);
+
+        // 更新题目表中的提交数和通过数
+        Question questionUpdate = new Question();
+        questionUpdate.setId(questionId);
+        // 提交数加1
+        questionUpdate.setSubmitNum(question.getSubmitNum() + 1);
+        // 如果通过了，通过数加1
+        if (questionSubmitUpdate.getStatus().equals(QuestionSubmitStatusEnum.ACCEPTED.getValue())) {
+            questionUpdate.setAcceptedNum(question.getAcceptedNum() + 1);
+        }
+        boolean questionUpdateResult = questionService.updateById(questionUpdate);
+        if (!questionUpdateResult) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "题目提交数更新失败");
+        }
+        return questionSubmitService.getById(questionSubmitId);
     }
 }

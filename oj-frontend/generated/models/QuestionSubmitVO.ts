@@ -8,14 +8,14 @@ import type { UserVO } from './UserVO';
 export type QuestionSubmitVO = {
     code?: string;
     createTime?: string;
-    id?: number;
+    id?: string;
     judgeInfo?: JudgeInfo;
     language?: string;
-    questionId?: number;
+    questionId?: string;
     questionVO?: QuestionVO;
     status?: number;
     updateTime?: string;
-    userId?: number;
+    userId?: string;
     userVO?: UserVO;
 };
 

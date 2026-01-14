@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.group38.oj.model.dto.question.QuestionQueryRequest;
 import com.group38.oj.model.entity.Question;
-import com.group38.oj.model.entity.Question;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.group38.oj.model.vo.QuestionVO;
 

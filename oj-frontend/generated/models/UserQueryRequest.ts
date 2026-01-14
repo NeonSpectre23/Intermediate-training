@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type UserQueryRequest = {
     current?: number;
-    id?: number;
+    id?: string;
     mpOpenId?: string;
     pageSize?: number;
     sortField?: string;

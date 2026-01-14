@@ -9,14 +9,14 @@ export type QuestionVO = {
     content?: string;
     createTime?: string;
     favourNum?: number;
-    id?: number;
+    id?: string;
     judgeConfig?: JudgeConfig;
     submitNum?: number;
     tags?: Array<string>;
     thumbNum?: number;
     title?: string;
     updateTime?: string;
-    userId?: number;
+    userId?: string;
     userVO?: UserVO;
 };
 

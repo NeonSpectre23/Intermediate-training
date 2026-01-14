@@ -1,6 +1,7 @@
 package com.group38.oj.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,13 +22,16 @@ import com.group38.oj.service.QuestionService;
 import com.group38.oj.service.QuestionSubmitService;
 import com.group38.oj.service.UserService;
 import com.group38.oj.utils.SqlUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -37,6 +41,7 @@ import java.util.stream.Collectors;
  * @createDate 2025-12-20 18:04:02
  */
 @Service
+@Slf4j
 public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper, QuestionSubmit>
         implements QuestionSubmitService {
 
@@ -87,7 +92,23 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目提交失败");
         }
         CompletableFuture.runAsync(() -> {
-            judgeService.judge(questionSubmit.getId());
+            try {
+                log.info("开始判题，提交ID：{}", questionSubmit.getId());
+                judgeService.judge(questionSubmit.getId());
+                log.info("判题完成，提交ID：{}", questionSubmit.getId());
+            } catch (Exception e) {
+                log.error("判题失败，提交ID：{}", questionSubmit.getId(), e);
+                // 更新状态为失败
+                QuestionSubmit updateSubmit = new QuestionSubmit();
+                updateSubmit.setId(questionSubmit.getId());
+                // 使用3表示失败状态（根据数据库表定义）
+                updateSubmit.setStatus(3);
+                // 使用HashMap代替Map.of()
+                Map<String, String> judgeInfo = new HashMap<>();
+                judgeInfo.put("message", e.getMessage());
+                updateSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
+                updateById(updateSubmit);
+            }
         });
         return questionSubmit.getId();
     }

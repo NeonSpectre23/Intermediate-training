@@ -1,4 +1,4 @@
-import { RouteRecordRaw } from "vue-router";
+import { RouteRecordRaw, RouteLocationNormalized } from "vue-router";
 import ExampleView from "@/views/ExampleView.vue";
 import AdminView from "@/views/AdminView.vue";
 import NoAuthView from "@/views/NoAuthView.vue";
@@ -10,6 +10,7 @@ import AddQuestionView from "@/views/question/AddQuestionView.vue";
 import ManageQuestionView from "@/views/question/ManageQuestionView.vue";
 import QuestionsView from "@/views/question/QuestionsView.vue";
 import ViewQuestionView from "@/views/question/ViewQuestionView.vue";
+import HomeView from "@/views/HomeView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -18,21 +19,43 @@ export const routes: Array<RouteRecordRaw> = [
     component: UserLayout,
     children: [
       {
-        path: "/user/login",
+        path: "login",
         name: "用户登录",
         component: UserLoginView,
       },
       {
-        path: "/user/register",
+        path: "register",
         name: "用户注册",
         component: UserRegisterView,
       },
       {
-        path: "/user/profile",
+        path: "profile",
         name: "用户信息",
         component: () =>
           import(
             /* webpackChunkName: "profile" */ "../views/user/UserProfileView.vue"
+          ),
+        meta: {
+          access: ACCESS_ENUM.USER,
+        },
+      },
+      {
+        path: "favorites",
+        name: "我的收藏",
+        component: () =>
+          import(
+            /* webpackChunkName: "favorites" */ "../views/user/UserFavoritesView.vue"
+          ),
+        meta: {
+          access: ACCESS_ENUM.USER,
+        },
+      },
+      {
+        path: "submissions",
+        name: "我的提交",
+        component: () =>
+          import(
+            /* webpackChunkName: "submissions" */ "../views/user/UserSubmissionsView.vue"
           ),
         meta: {
           access: ACCESS_ENUM.USER,
@@ -52,7 +75,7 @@ export const routes: Array<RouteRecordRaw> = [
     path: "/view/question/:id",
     name: "在线做题",
     component: ViewQuestionView,
-    props: true,
+    props: (route: RouteLocationNormalized) => ({ id: String(route.params.id) }),
     meta: {
       access: ACCESS_ENUM.USER,
       hideInMenu: true,
@@ -86,7 +109,7 @@ export const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "主页",
-    component: QuestionsView,
+    component: HomeView,
   },
   {
     path: "/obfuscate",
